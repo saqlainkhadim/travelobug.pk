@@ -1,0 +1,31 @@
+ /*For top logo position fix*/
+.header_controls{
+	margin-top:0 !important;
+	background-color:none !important;
+	}
+@media (max-width: 767px) {
+	.header_controls{
+		margin-top:-50px !important;
+		background-color:transparent !important;
+		}
+}
+
+.address_html {
+	position: absolute;
+	bottom: -28px;
+	background-color: #f8f9fa;
+	width: 100%;
+	z-index: 10;
+}
+.address_html ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+.address_html ul li {
+	border: 1px solid #999;
+	width: 100%;
+	margin-bottom: -1px;
+    padding: 0 10px;
+	cursor: pointer;
+}
