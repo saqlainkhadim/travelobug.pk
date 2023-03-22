@@ -343,8 +343,12 @@ class SettingsController extends Controller
         if (!$request->isMethod('post')) {
             $paypal = Settings::getAll()->where('type', 'PayPal')->toArray();
             $stripe = Settings::getAll()->where('type', 'Stripe')->toArray();
+            $easypaisa = Settings::getAll()->where('type', 'easypaisa')->toArray();
+
             $data['paypal'] = $this->helper->key_value('name', 'value', $paypal);
             $data['stripe'] = $this->helper->key_value('name', 'value', $stripe);
+            $data['easypaisa'] = $this->helper->key_value('name', 'value', $easypaisa);
+
             //  $data['countries'] = Country::getAll()->pluck('name','id');
             $data['countries'] = Country::where('short_name', 'PK')->pluck('name', 'id');
             if ($this->n_as_k_c()) {
@@ -353,6 +357,55 @@ class SettingsController extends Controller
             }
 
             return $dataTable->render('admin.settings.payment', $data);
+        } elseif ($request['gateway'] == 'easypaisa') {
+
+            $rules = array(
+                'store_id'      => 'required',
+                'hash_key'      => 'required',
+                'post_url'     => 'required',
+//                'payment_method'          => 'required',
+                'easypaisa_status' => 'required',
+            );
+
+
+
+
+            $fieldNames = array(
+                'store_id'      =>  'EASY PAISA STORE ID',
+                'hash_key'      => 'EASY PAISA HASH KEY',
+                'post_url'     => 'EASY PAISA POST URL',
+//                'payment_method'          => 'EASY PAISA PAYMENT METHOD',
+                'easypaisa_status' => 'Paypal Status',
+            );
+
+            $validator = Validator::make($request->all(), $rules, [], $fieldNames);
+
+            if ($validator->fails()) {
+                $data['success'] = 0;
+                $data['errors']  = $validator->messages();
+                echo json_encode($data);
+            } else {
+                if (env('APP_MODE', '') != 'test') {
+                    Settings::where(['name' => 'store_id', 'type' => 'easypaisa'])->update(['value' => $request->store_id]);
+                    Settings::where(['name' => 'hash_key', 'type' => 'easypaisa'])->update(['value' => $request->hash_key]);
+                    Settings::where(['name' => 'post_url', 'type' => 'easypaisa'])->update(['value' => $request->post_url]);
+
+
+
+                    $match                  = ['type' => 'easypaisa', 'name' => 'easypaisa_status'];
+                    $paymentSettings        = Settings::firstOrNew($match);
+                    $paymentSettings->name  = 'easypaisa_status';
+                    $paymentSettings->value = $request->easypaisa_status;
+                    $paymentSettings->type  = 'easypaisa';
+                    $paymentSettings->save();
+                }
+
+                $data['message'] = 'Updated Successfully';
+                $data['success'] = 1;
+                echo json_encode($data);
+            }
+
+
         } elseif ($request['gateway'] == 'paypal') {
             $rules = array(
                 'username'      => 'required',
