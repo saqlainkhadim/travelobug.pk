@@ -344,10 +344,12 @@ class SettingsController extends Controller
             $paypal = Settings::getAll()->where('type', 'PayPal')->toArray();
             $stripe = Settings::getAll()->where('type', 'Stripe')->toArray();
             $easypaisa = Settings::getAll()->where('type', 'easypaisa')->toArray();
+            $jazzcash = Settings::getAll()->where('type', 'jazzcash')->toArray();
 
             $data['paypal'] = $this->helper->key_value('name', 'value', $paypal);
             $data['stripe'] = $this->helper->key_value('name', 'value', $stripe);
             $data['easypaisa'] = $this->helper->key_value('name', 'value', $easypaisa);
+            $data['jazzcash'] = $this->helper->key_value('name', 'value', $jazzcash);
 
             //  $data['countries'] = Country::getAll()->pluck('name','id');
             $data['countries'] = Country::where('short_name', 'PK')->pluck('name', 'id');
@@ -357,12 +359,63 @@ class SettingsController extends Controller
             }
 
             return $dataTable->render('admin.settings.payment', $data);
-        } elseif ($request['gateway'] == 'easypaisa') {
+        } elseif ($request['gateway'] == 'jazzcash') {
+
+            $rules = array(
+                'merchant_id'      => 'required',
+                'password'      => 'required',
+                'post_url'     => 'required',
+//                'integerity_salt'          => 'required',
+                'jazzcash_status' => 'required',
+            );
+
+
+
+
+            $fieldNames = array(
+                'merchant_id'      =>  'JAZZCASH  STORE ID',
+                'password'      => 'JAZZCASH  HASH KEY',
+                'post_url'     => 'JAZZCASH  POST URL',
+//                'integerity_salt'          => 'JAZZ CASH  integerity_salt',
+                'jazzcash_status' => 'JAZZCASH Status',
+            );
+
+            $validator = Validator::make($request->all(), $rules, [], $fieldNames);
+
+            if ($validator->fails()) {
+                $data['success'] = 0;
+                $data['errors']  = $validator->messages();
+                echo json_encode($data);
+            } else {
+                if (env('APP_MODE', '') != 'test') {
+                    Settings::where(['name' => 'merchant_id', 'type' => 'jazzcash'])->update(['value' => $request->merchant_id]);
+                    Settings::where(['name' => 'password', 'type' => 'jazzcash'])->update(['value' => $request->password]);
+                    Settings::where(['name' => 'post_url', 'type' => 'jazzcash'])->update(['value' => $request->post_url]);
+                    Settings::where(['name' => 'integerity_salt', 'type' => 'jazzcash'])->update(['value' => $request->integerity_salt]);
+
+
+
+                    $match                  = ['type' => 'jazzcash', 'name' => 'jazzcash_status'];
+                    $paymentSettings        = Settings::firstOrNew($match);
+                    $paymentSettings->name  = 'jazzcash_status';
+                    $paymentSettings->value = $request->jazzcash_status;
+                    $paymentSettings->type  = 'jazzcash';
+                    $paymentSettings->save();
+                }
+
+                $data['message'] = 'Updated Successfully';
+                $data['success'] = 1;
+                echo json_encode($data);
+            }
+
+
+        }elseif ($request['gateway'] == 'easypaisa') {
 
             $rules = array(
                 'store_id'      => 'required',
                 'hash_key'      => 'required',
                 'post_url'     => 'required',
+                'confirm_url'     => 'required',
 //                'payment_method'          => 'required',
                 'easypaisa_status' => 'required',
             );
@@ -371,11 +424,12 @@ class SettingsController extends Controller
 
 
             $fieldNames = array(
-                'store_id'      =>  'EASY PAISA STORE ID',
-                'hash_key'      => 'EASY PAISA HASH KEY',
-                'post_url'     => 'EASY PAISA POST URL',
-//                'payment_method'          => 'EASY PAISA PAYMENT METHOD',
-                'easypaisa_status' => 'Paypal Status',
+                'store_id'      =>  'EASYPAISA STORE ID',
+                'hash_key'      => 'EASYPAISA HASH KEY',
+                'post_url'     => 'EASYPAISA POST URL',
+                'confirm_url'     => 'EASYPAISA Confirm URL',
+//                'payment_method'          => 'EASYPAISA PAYMENT METHOD',
+                'easypaisa_status' => 'EASYPAISA Status',
             );
 
             $validator = Validator::make($request->all(), $rules, [], $fieldNames);
@@ -389,6 +443,7 @@ class SettingsController extends Controller
                     Settings::where(['name' => 'store_id', 'type' => 'easypaisa'])->update(['value' => $request->store_id]);
                     Settings::where(['name' => 'hash_key', 'type' => 'easypaisa'])->update(['value' => $request->hash_key]);
                     Settings::where(['name' => 'post_url', 'type' => 'easypaisa'])->update(['value' => $request->post_url]);
+                    Settings::where(['name' => 'confirm_url', 'type' => 'easypaisa'])->update(['value' => $request->confirm_url]);
 
 
 

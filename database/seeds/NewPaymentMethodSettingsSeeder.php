@@ -32,6 +32,12 @@ class NewPaymentMethodSettingsSeeder extends Seeder
             'type' => 'easypaisa',
             'value' => 'empty'
         ]);
+
+        Settings::create([
+            'name' => 'confirm_url',
+            'type' => 'easypaisa',
+            'value' => 'empty'
+        ]);
         Settings::create([
             'name' => 'payment_method',
             'type' => 'easypaisa',
@@ -40,6 +46,35 @@ class NewPaymentMethodSettingsSeeder extends Seeder
         Settings::create([
             'name' => 'easypaisa_status',
             'type' => 'easypaisa',
+            'value' => 'empty'
+        ]);
+
+
+
+//        Settings for JazzCash
+        Settings::create([
+            'name' => 'merchant_id',
+            'type' => 'jazzcash',
+            'value' => 'empty'
+        ]);
+        Settings::create([
+            'name' => 'password',
+            'type' => 'jazzcash',
+            'value' => 'empty'
+        ]);
+        Settings::create([
+            'name' => 'post_url',
+            'type' => 'jazzcash',
+            'value' => 'empty'
+        ]);
+        Settings::create([
+            'name' => 'integerity_salt',
+            'type' => 'jazzcash',
+            'value' => 'empty'
+        ]);
+        Settings::create([
+            'name' => 'jazzcash_status',
+            'type' => 'jazzcash',
             'value' => 'empty'
         ]);
     }
