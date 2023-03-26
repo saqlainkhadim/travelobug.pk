@@ -130,6 +130,12 @@ Route::group(['middleware' => ['guest:users', 'locale']], function () {
     Route::get('payments/cancel', 'PaymentController@cancel');
     Route::get('payments/stripe', 'PaymentController@stripePayment');
     Route::post('payments/stripe-request', 'PaymentController@stripeRequest');
+    // Easypaisa
+    Route::get('payments/easypaisa', 'PaymentController@easypaisaPayment');
+    Route::post('payments/easypaisa-request', 'PaymentController@easypaisaRequest');
+    Route::get('payments/easypaisa-request', 'PaymentController@easypaisaRequest');
+    Route::get('payments/easypaisa-confirm', 'PaymentController@easypaisaConfirm');
+
     Route::match(['get', 'post'], 'payments/bank-payment', 'PaymentController@bankPayment');
     Route::get('booking/{id}', 'BookingController@index')->where('id', '[0-9]+');
     Route::get('booking_payment/{id}', 'BookingController@requestPayment')->where('id', '[0-9]+');

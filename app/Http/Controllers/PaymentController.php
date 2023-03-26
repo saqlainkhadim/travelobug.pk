@@ -18,6 +18,7 @@ use Omnipay\Omnipay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
+use URL;
 
 class PaymentController extends Controller
 {
@@ -45,9 +46,10 @@ class PaymentController extends Controller
     {
         $data['paypal_status'] = Settings::getAll()->where('name', 'paypal_status')->where('type', 'PayPal')->first();
         $data['stripe_status'] = Settings::getAll()->where('name', 'stripe_status')->where('type', 'Stripe')->first();
+        $data['easypaisa_status'] = Settings::getAll()->where('name', 'stripe_status')->where('type', 'Stripe')->first();
+        $data['jazzcash_status'] = Settings::getAll()->where('name', 'stripe_status')->where('type', 'Stripe')->first();
         $data['banks'] = Bank::getAll()->where('status', 'Active')->count();
 
-        // dd($request->all());
 
         if ($request->isMethod('post')) {
             Session::put('payment_property_id', $request->id);
@@ -160,6 +162,9 @@ class PaymentController extends Controller
 
         if ($request->payment_method == 'stripe') {
             return redirect('payments/stripe');
+        }
+        if ($request->payment_method == 'easypaisa') {
+            return redirect('payments/easypaisa');
         } elseif ($request->payment_method == 'paypal') {
             $this->setup();
             if ($amount) {
@@ -260,6 +265,73 @@ class PaymentController extends Controller
         return view('payment.stripe', $data);
     }
 
+    public function easypaisaConfirm(Request $request)
+    {
+        if (isset($request->auth_token) && $request->auth_token) {
+            $data = $this->getDataForBooking();
+            // dd($data);
+            $data['post_data'] =  array(
+                "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+                "auth_token"             =>  $request->auth_token,
+                "postBackURL"         => URL::to('payments/easypaisa-request'),
+            );
+
+            $data['easypaisa'] = Settings::getAll()->where('type', 'easypaisa')->pluck('value', 'name');
+            return view('payment.easypaisa', $data);
+
+        } else {
+            abort(505);
+        }
+    }
+
+    public function easypaisaPayment(Request $request)
+    {
+        $data = $this->getDataForBooking();
+        $data['easypaisa'] = $easypaisa = Settings::getAll()->where('type', 'easypaisa')->pluck('value', 'name');
+
+        $DateTime      = new DateTime();
+        $orderRefNum =  $data['id'] . $DateTime->format('YmdHis');
+
+        $ExpiryDateTime = $DateTime;
+        $ExpiryDateTime->modify('+' . 1 . ' hours');
+        $expiryDate = $ExpiryDateTime->format('Ymd His');
+
+        $data['post_data'] =  array(
+            "storeId"             => $easypaisa['store_id'],
+            "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+            "postBackURL"         => URL::to('payments/easypaisa-confirm'),
+            "orderRefNum"         => $orderRefNum,
+            "expiryDate"         => $expiryDate,           //Optional
+            "merchantHashedReq" => "",                      //Optional
+            "autoRedirect"         => "1",                      //Optional
+            "paymentMethod"     => "MA_PAYMENT_METHOD",    //Optional
+        );
+
+        $sortedArray = $data['post_data'];
+        // ksort($sortedArray);
+        $sorted_string = '';
+        $i = 1;
+
+        foreach ($sortedArray as $key => $value) {
+            if (!empty($value)) {
+                if ($i == 1) {
+                    $sorted_string = $key . '=' . $value;
+                } else {
+                    $sorted_string = $sorted_string . '&' . $key . '=' . $value;
+                }
+            }
+            $i++;
+        }
+        // AES/ECB/PKCS5Padding algorithm
+        $cipher = "aes-128-ecb";
+        $crypttext = openssl_encrypt($sorted_string, $cipher, $easypaisa['hash_key'], OPENSSL_RAW_DATA);
+        $HashedRequest = Base64_encode($crypttext);
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+
+        $data['post_data']['merchantHashedReq'] =  $HashedRequest;
+        return view('payment.easypaisa', $data);
+    }
+
     public function stripeRequest(Request $request)
     {
         $currencyDefault = Currency::getAll()->where('default', 1)->first();
@@ -320,6 +392,52 @@ class PaymentController extends Controller
 
                 return redirect('payments/book/' . Session::get('payment_property_id'));
             }
+        }
+    }
+    public function easypaisaRequest(Request $request)
+    {
+        if (isset($request->responseCode) && $request->responseCode =='0000' ) {
+            $currencyDefault = Currency::getAll()->where('default', 1)->first();
+
+            $id            = Session::get('payment_property_id');
+            $booking_id    = Session::get('payment_booking_id');
+            $booking_type  = Session::get('payment_booking_type');
+            $price_list    = Session::get('payment_price_list');
+            $price_eur     = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), $currencyDefault->code, $price_list->total);
+            $price_pkr     = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $price_list->total);
+            
+            info('Price = ' . $price_eur);
+            
+            $pm    = PaymentMethods::where('name', 'easypaisa')->first();
+            $data  = [
+                'property_id'      => Session::get('payment_property_id'),
+                'checkin'          => Session::get('payment_checkin'),
+                'checkout'         => Session::get('payment_checkout'),
+                'number_of_guests' => Session::get('payment_number_of_guests'),
+                'transaction_id'   => $request->transactionId,
+                'price_list'       => Session::get('payment_price_list'),
+                'country'          => Session::get('payment_country'),
+                'message_to_host'  => Session::get('message_to_host_' . auth()->id()),
+                'payment_method_id' => $pm->id,
+                'paymode'          => 'easypaisa',
+                'booking_id'       => $booking_id,
+                'booking_type'     => $booking_type
+            ];
+
+            if (isset($booking_id) && !empty($booking_id)) {
+                $code = $this->update($data);
+            } else {
+                $code = $this->store($data);
+            }
+
+            $this->helper->one_time_message('success', trans('messages.success.payment_complete_success'));
+
+            return redirect('booking/requested?code=' . $code);
+            
+        } else {
+            $this->helper->one_time_message('success', trans('messages.error.payment_request_error'));
+
+            return redirect('payments/book/' . Session::get('payment_property_id'));
         }
     }
 

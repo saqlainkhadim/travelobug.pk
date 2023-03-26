@@ -61,6 +61,8 @@ class BookingController extends Controller
         $data['paypal_status'] = Settings::getAll()->where('name', 'paypal_status')->where('type', 'PayPal')->first();
 
         $data['stripe_status'] = Settings::getAll()->where('name', 'stripe_status')->where('type', 'Stripe')->first();
+        $data['easypaisa_status'] = Settings::getAll()->where('name', 'easypaisa_status')->where('type', 'easypaisa')->first();
+        $data['jazzcash_status'] = Settings::getAll()->where('name', 'jazzcash_status')->where('type', 'jazzcash')->first();
 
         $data['booking_id']    = $request->id;
 

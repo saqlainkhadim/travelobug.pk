@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Settings;
+use App\Models\PaymentMethods;
 use Illuminate\Database\Seeder;
 
 class NewPaymentMethodSettingsSeeder extends Seeder
@@ -77,5 +78,10 @@ class NewPaymentMethodSettingsSeeder extends Seeder
             'type' => 'jazzcash',
             'value' => 'empty'
         ]);
+
+        //   Creating payment methodes
+      PaymentMethods::create(['name'=> 'easypaisa','status'=>'Active'])->first();
+      PaymentMethods::create(['name'=> 'jazzcash','status'=>'Active'])->first();
+
     }
 }

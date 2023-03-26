@@ -53,6 +53,17 @@
 
 					<div class="col-sm-12 p-0 pb-3">
 						<select name="payment_method" class="form-control mb20" id="payment-method-select">
+
+							@if($easypaisa_status->value == 1)
+								<option value="easypaisa" data-payment-type="payment-method" data-cc-type="visa" data-cc-name="" data-cc-expire="">
+EasyPaisa
+								</option>
+							@endif
+							@if($jazzcash_status->value == 1)
+								<option value="jazzcash" data-payment-type="payment-method" data-cc-type="visa" data-cc-name="" data-cc-expire="">
+Jazzcash
+								</option>
+							@endif
 							@if($paypal_status->value == 1)
 								<option value="paypal" data-payment-type="payment-method" data-cc-type="visa" data-cc-name="" data-cc-expire="">
 								{{ trans('messages.payment.paypal') }}
@@ -77,7 +88,7 @@
 								</option>
 							@endif
 						</select>
-						<div class="paypal-div {{$paypal_status->value != 1 ? 'display-off' : ''}}">
+						<div class="paypal-div display-off {{$paypal_status->value != 1 ? 'display-off' : ''}}">
 							<span id='paypal-text'>{{ trans('messages.payment.redirect_to_paypal') }}</span>
 						</div>
 					</div>
