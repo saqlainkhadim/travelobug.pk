@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
       $this->call(TimezoneTableSeeder::class);
       $this->call(EmailTemplateTableSeeder::class);
       $this->call(TestimonialTableSeeder::class);
+      $this->call(NewPaymentMethodSettingsSeeder::class);
 
       // $this->call(ResetDataSeeder::class);
     }
