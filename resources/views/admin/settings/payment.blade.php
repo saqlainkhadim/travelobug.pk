@@ -34,6 +34,8 @@ $form_data = [
 			'fields' => [
 				['type' => 'hidden', 'class' => '', 'label' => '', 'id' =>'stripe', 'name' => 'gateway', 'value' => 'easypaisa'],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'EASYPAISA STORE ID', 'name' => 'store_id', 'value' => $easypaisa['store_id']],
+	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'EASYPAISA username', 'name' => 'username', 'value' => $easypaisa['username']],
+	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'EASYPAISA password', 'name' => 'password', 'value' => $easypaisa['password']],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'EASYPAISA HASH KEY', 'name' => 'hash_key', 'value' => $easypaisa['hash_key']],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'EASYPAISA POST URL', 'name' => 'post_url', 'value' => $easypaisa['post_url']],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'EASYPAISA Confirm URL', 'name' => 'confirm_url', 'value' => $easypaisa['confirm_url']],

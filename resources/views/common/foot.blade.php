@@ -1,4 +1,7 @@
-		<!-- New Js start-->
+
+
+
+        <!-- New Js start-->
 		<script src="{{asset('public/js/jquery-2.2.4.min.js')}}"></script>
 		<script src="{{asset('public/js/bootstrap.bundle.min.js')}}"></script>
 		<script src="{{asset('public/js/main.js')}}"></script>
@@ -81,6 +84,9 @@
                 $(this).closest('div').html('');
             });
 		</script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="{{asset('public/js/inc.func.js')}}"></script>
+
 		<!-- Needed Js from Old Version End -->
 		@stack('scripts')
 	</body>

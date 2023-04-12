@@ -10,54 +10,82 @@
                 </div>
             </div>
         @endif
+        <div class="modal " id="wait-easypay" tabindex="-1" role="dialog" data-backdrop="static"
+            data-keyboard="false">
+            <div class="modal-dialog " role="document">
+                <div class="modal-content">
+                    <div class="modal-body" style="display:flex">
+                        <div>
+                            <img src="{{ asset('public/payment-images/easypaisa.png') }}" style="height: 74px;" />
+                        </div>
+
+                        <div style="padding:0px 10px; font-weight:600;">
+                            Please wait while we are making request to your EasyPaisa Mobile Number.... <br><br>
+                            Dial your PIN to your mobile on Popup ( Transaction Rs.<?php echo $post_data['amount']; ?>)
+
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-8 col-sm-8 col-xs-12 mb-5 main-panel p-5 border rounded">
                 <div class="pb-3 m-0 text-24 font-weight-700">EasyPaisa Payment {{ trans('messages.payment.payment') }}
                 </div>
-                @if (isset($post_data['auth_token']))
-                    <form action="{{ $easypaisa['confirm_url'] }}" method="post" id="payment-form">
+                <form action="{{ url('payments/easypaisa') }}" method="post" id="payment-form">
+                    @csrf
 
-                        <input type="hidden" name="postBackURL" value="<?php echo $post_data['postBackURL']; ?>">
-                        <input name="auth_token" value="<?php echo $post_data['auth_token']; ?>" type="hidden" />
 
-                        <div class="form-row p-0 m-0">
-                            <label for="card-element">
-                                you are going to pay Rs.<?php echo $post_data['amount']; ?> though Easypaisa
-                            </label>
-                        </div>
-                        <div class="form-group mt-5">
-                            <div class="col-sm-8 p-0">
-                                <button type="submit"
-                                    class="btn vbtn-outline-success text-16 font-weight-700 pl-5 pr-5 pt-3 pb-3"><i
-                                        class="spinner fa fa-spinner fa-spin d-none"></i>Pay</button>
-                            </div>
-                        </div>
-                    </form>
-                @else
-                    <form action="{{ $easypaisa['post_url'] }}" method="post" id="payment-form">
-                        
-                        <input type="hidden" name="amount" value="<?php echo $post_data['amount']; ?>">
-                        <input type="hidden" name="storeId" value="<?php echo $post_data['storeId']; ?>">
-                        <input type="hidden" name="postBackURL" value="<?php echo $post_data['postBackURL']; ?>">
-                        <input type="hidden" name="orderRefNum" value="<?php echo $post_data['orderRefNum']; ?>">
-                        <input type="hidden" name="expiryDate" value="<?php echo $post_data['expiryDate']; ?>">
-                        <input type="hidden" name="autoRedirect" value="<?php echo $post_data['autoRedirect']; ?>">
-                        <input type="hidden" name="merchantHashedReq" value="<?php echo $post_data['merchantHashedReq']; ?>">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td>Mobile AccountNo<span class="danger-text">*</span>:</td>
+                        </tr>
+                        <tbody>
+                            <tr>
+                                <?php
+                                $phone_no = auth()->user()->formatted_phone;
+                                $first_mobileAccountNo_char = substr(auth()->user()->formatted_phone, 0, 1);
+                                if (auth()->user()->default_country == 'pk' && $first_mobileAccountNo_char == '+') {
+                                    $phone_no = convert_pk_phone_number(auth()->user()->formatted_phone);
+                                }
 
-                        <div class="form-row p-0 m-0">
-                            <label for="card-element">
-                                you are going to pay Rs.<?php echo $post_data['amount']; ?> though Easypaisa
-                            </label>
+                                ?>
+                                <td><input class="form-control" required name="mobileAccountNo" type="text"
+                                        value="{{ $phone_no }}">
+                                    <span class="text-danger">{{ $errors->first('mobileAccountNo') }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tr>
+                            <td>emailAddress<span class="danger-text">*</span>:</td>
+                        </tr>
+                        <tbody>
+                            <tr>
+                                <td><input class="form-control" required name="emailAddress" type="email"
+                                        value="{{ auth()->user()->email }}">
+                                    <span class="text-danger">{{ $errors->first('emailAddress') }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="form-row p-0 m-0">
+                        <label for="card-element">
+                            you are going to pay Rs.<?php echo $post_data['amount']; ?> though Easypaisa
+                        </label>
+                    </div>
+                    <div class="form-group mt-5">
+                        <div class="col-sm-8 p-0">
+                            <button type="submit"
+                                class="btn vbtn-outline-success text-16 font-weight-700 pl-5 pr-5 pt-3 pb-3"><i
+                                    class="spinner fa fa-spinner fa-spin d-none"></i>Pay</button>
                         </div>
-                        <div class="form-group mt-5">
-                            <div class="col-sm-8 p-0">
-                                <button type="submit"
-                                    class="btn vbtn-outline-success text-16 font-weight-700 pl-5 pr-5 pt-3 pb-3"><i
-                                        class="spinner fa fa-spinner fa-spin d-none"></i>Proceed to Checkhout</button>
-                            </div>
-                        </div>
-                    </form>
-                @endif
+                    </div>
+                </form>
+
             </div>
 
             <div class="col-md-4 mb-5">
@@ -229,86 +257,40 @@
         <script type="text/javascript" src="{{ url('public/js/jquery.validate.min.js') }}"></script>
         <script></script>
         <script type="text/javascript">
-            // Create a Stripe client
+            $(document).ready(function() {
+                $("form").on('submit', function(e) {
+                    $('#wait-easypay').modal('show');
 
-
-            // Create an instance of Elements
-            var elements = stripe.elements();
-
-            // Custom styling can be passed to options when creating an Element.
-            // (Note that this demo uses a wider set of styles than the guide below.)
-            var style = {
-                base: {
-                    color: '#32325d',
-                    lineHeight: '24px',
-                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                    fontSmoothing: 'antialiased',
-                    fontSize: '16px',
-                    '::placeholder': {
-                        color: '#aab7c4'
-                    }
-                },
-                invalid: {
-                    color: '#fa755a',
-                    iconColor: '#fa755a'
-                }
-            };
-
-            // Create an instance of the card Element
-            var card = elements.create('card', {
-                style: style
-            });
-
-            // Add an instance of the card Element into the `card-element` <div>
-            card.mount('#card-element');
-
-            // Handle real-time validation errors from the card Element.
-            card.addEventListener('change', function(event) {
-                var displayError = document.getElementById('card-errors');
-                if (event.error) {
-                    displayError.textContent = event.error.message;
-                } else {
-                    displayError.textContent = '';
-                }
-            });
-
-            // Handle form submission
-            var form = document.getElementById('payment-form');
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                stripe.createToken(card).then(function(result) {
-                    if (result.error) {
-                        // Inform the user if there was an error
-                        var errorElement = document.getElementById('card-errors');
-                        errorElement.textContent = result.error.message;
-                    } else {
-                        // Send the token to your server
-                        stripeTokenHandler(result.token);
-                    }
-                });
-            });
-
-            function stripeTokenHandler(token) {
-                // Insert the token ID into the form so it gets submitted to the server
-                var form = document.getElementById('payment-form');
-                var hiddenInput = document.createElement('input');
-                hiddenInput.setAttribute('type', 'hidden');
-                hiddenInput.setAttribute('name', 'stripeToken');
-                hiddenInput.setAttribute('value', token.id);
-                form.appendChild(hiddenInput);
-
-                $("#stripe_btn").on("click", function(e) {
-                    $("#stripe_btn").attr("disabled", true);
                     e.preventDefault();
+                    let form_url = this.action;
+                    let form_data = $(this).serialize();
+
+
+                    $.ajax({
+                            url: form_url,
+                            method: "POST",
+                            dataType: "json",
+                            data: form_data,
+                            // beforeSend:function(result){
+                            //     alert('beforeSend');
+                            // },
+                            success: function(response){
+
+                                ajaxSuccessToastr(response);
+                                $('#wait-easypay').modal('hide');
+                                window.location = response.data.redirect_url;
+                            },
+                            error: function(data){
+                                ajaxErrorToastr(data);
+                                $('#wait-easypay').modal('hide');
+                            },
+
+                        });
+
+
                 });
-
-                $(".spinner").removeClass('d-none');
-                $("#save_btn-text").text("{{ trans('messages.users_profile.save') }} ..");
-
-                $("#payment-form").trigger("submit");
-
-            }
+            });
         </script>
+
     @endpush
 @stop

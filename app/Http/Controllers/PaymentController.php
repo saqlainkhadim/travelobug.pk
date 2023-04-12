@@ -12,6 +12,7 @@ use App\Http\{
     Helpers\Common,
     Controllers\EmailController
 };
+use DB;
 
 use App\Models\{Activity, Bank, BankDate, Payouts, Currency, Country, Settings, Payment, Photo, Withdraw, Messages, Wallet, Properties, Bookings, PaymentMethods, BookingDetails, PropertyDates, PropertyPrice, PropertyFees};
 use Omnipay\Omnipay;
@@ -19,6 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use URL;
+use Illuminate\Support\Facades\Http;
+
 
 class PaymentController extends Controller
 {
@@ -165,6 +168,9 @@ class PaymentController extends Controller
         }
         if ($request->payment_method == 'easypaisa') {
             return redirect('payments/easypaisa');
+        }
+        if ($request->payment_method == 'jazzcash') {
+            return redirect('payments/jazzcash');
         } elseif ($request->payment_method == 'paypal') {
             $this->setup();
             if ($amount) {
@@ -271,16 +277,15 @@ class PaymentController extends Controller
             $data = $this->getDataForBooking();
             // dd($data);
             $data['post_data'] =  array(
-                "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+                "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total),
                 "auth_token"             =>  $request->auth_token,
                 "postBackURL"         => URL::to('payments/easypaisa-request'),
             );
 
             $data['easypaisa'] = Settings::getAll()->where('type', 'easypaisa')->pluck('value', 'name');
             return view('payment.easypaisa', $data);
-
         } else {
-            abort(505);
+            abort(500);
         }
     }
 
@@ -292,46 +297,312 @@ class PaymentController extends Controller
         $DateTime      = new DateTime();
         $orderRefNum =  $data['id'] . $DateTime->format('YmdHis');
 
-        $ExpiryDateTime = $DateTime;
-        $ExpiryDateTime->modify('+' . 1 . ' hours');
-        $expiryDate = $ExpiryDateTime->format('Ymd His');
+        // $ExpiryDateTime = $DateTime;
+        // $ExpiryDateTime->modify('+' . 1 . ' hours');
+        // $expiryDate = $ExpiryDateTime->format('Ymd His');
+
+        // $data['post_data'] =  array(
+        //     "storeId"             => $easypaisa['store_id'],
+        //     "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+        //     "postBackURL"         => URL::to('payments/easypaisa-confirm'),
+        //     "orderRefNum"         => $orderRefNum,
+        //     "expiryDate"         => $expiryDate,           //Optional
+        //     "merchantHashedReq" => "",                      //Optional
+        //     "autoRedirect"         => "1",                      //Optional
+        //     "paymentMethod"     => "MA_PAYMENT_METHOD",    //Optional
+        // );
 
         $data['post_data'] =  array(
-            "storeId"             => $easypaisa['store_id'],
+            // "storeId"             => $easypaisa['store_id'],
             "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
-            "postBackURL"         => URL::to('payments/easypaisa-confirm'),
-            "orderRefNum"         => $orderRefNum,
-            "expiryDate"         => $expiryDate,           //Optional
-            "merchantHashedReq" => "",                      //Optional
-            "autoRedirect"         => "1",                      //Optional
-            "paymentMethod"     => "MA_PAYMENT_METHOD",    //Optional
+            // "amount"             => 10,
+            // "postBackURL"         => URL::to('payments/easypaisa-confirm'),
+            // "orderRefNum"         => "testTrnsx",
+            // "orderId"         => $orderRefNum,
+            // "timeStamp"         =>  date('Y-m-d\TH:i:s'),           //Optional
+            // "token"         => $expiryDate,           //Optional
+            // "encryptedHashRequest" => "",                      //Optional
+
+
+            // "orderid"         => $orderRefNum,
+            // "paymentMethod"     => "InitialRequest",    //Optional
+
+
+            // "autoRedirect"         => "1",                      //Optional
+            // "paymentMethod"     => "MA_PAYMENT_METHOD",    //Optional
+            // "transactionType"     => "InitialRequest",    //Optional
+            // "orderRefNum"         => $orderRefNum,
+            // "expiryDate"         => $expiryDate,           //Optional
+
         );
 
-        $sortedArray = $data['post_data'];
+        // $sortedArray = $data['post_data'];
+        // // dd($sortedArray );
         // ksort($sortedArray);
-        $sorted_string = '';
-        $i = 1;
 
-        foreach ($sortedArray as $key => $value) {
-            if (!empty($value)) {
-                if ($i == 1) {
-                    $sorted_string = $key . '=' . $value;
-                } else {
-                    $sorted_string = $sorted_string . '&' . $key . '=' . $value;
-                }
-            }
-            $i++;
-        }
+        // $data['post_data'] =  $sortedArray;
+
+        // $sorted_string = '';
+        // $i = 1;
+
+        // foreach ($sortedArray as $key => $value) {
+        //     if (!empty($value)) {
+        //         if ($i == 1) {
+        //             $sorted_string = $key . '=' . $value;
+        //         } else {
+        //             $sorted_string = $sorted_string . '&' . $key . '=' . $value;
+        //         }
+        //     }
+        //     $i++;
+        // }
+        // dd($sorted_string);
         // AES/ECB/PKCS5Padding algorithm
-        $cipher = "aes-128-ecb";
-        $crypttext = openssl_encrypt($sorted_string, $cipher, $easypaisa['hash_key'], OPENSSL_RAW_DATA);
-        $HashedRequest = Base64_encode($crypttext);
+        // dd($sorted_string);
+        // $data['sorted_string'] = $sorted_string = '';
+        // $cipher = "aes-128-ecb";
+        // $crypttext = openssl_encrypt($sorted_string, $cipher, $easypaisa['hash_key'], OPENSSL_RAW_DATA);
+        // $HashedRequest = Base64_encode($crypttext);
         //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 
-        $data['post_data']['merchantHashedReq'] =  $HashedRequest;
+        // $data['post_data']['encryptedHashRequest'] =  $HashedRequest;
+        // dd(auth()->user());
         return view('payment.easypaisa', $data);
     }
+    public function easypaisaDoPayment(Request $request)
+    {
 
+
+        $rules = array(
+            'emailAddress'      => 'required',
+            'mobileAccountNo'      => 'required',
+        );
+        $this->validate($request, $rules,[]);
+
+        DB::beginTransaction();
+        try {
+            $data = $this->getDataForBooking();
+            $data['easypaisa'] = $easypaisa = Settings::getAll()->where('type', 'easypaisa')->pluck('value', 'name');
+            $DateTime      = new DateTime();
+            $orderRefNum =  $data['id'] . $DateTime->format('YmdHis');
+
+
+            $phone_no = $request->mobileAccountNo;
+            $first_mobileAccountNo_char = substr($request->mobileAccountNo, 0, 1);
+            if (auth()->user()->default_country == 'pk' &&  $first_mobileAccountNo_char == '+') {
+                $phone_no =  convert_pk_phone_number($request->mobileAccountNo);
+            }
+
+
+            $api_data = [
+                'orderId' => $orderRefNum,
+                'emailAddress' =>  $request->emailAddress,
+                'storeId' =>   $easypaisa['store_id'],
+                'transactionAmount' =>  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+                // 'transactionAmount' =>  10,
+                'transactionType' =>  "MA",
+                'mobileAccountNo' =>  $phone_no,
+            ];
+
+            $response = Http::withHeaders([
+                'Credentials' => $easypaisa['Credentials'],
+            ])->post($easypaisa['post_url'], $api_data);
+
+
+            if ($response->status() == 200 && $response->json()['responseCode'] == "0000" ) {
+
+                $currencyDefault = Currency::getAll()->where('default', 1)->first();
+
+                $id            = Session::get('payment_property_id');
+                $booking_id    = Session::get('payment_booking_id');
+                $booking_type  = Session::get('payment_booking_type');
+                $price_list    = Session::get('payment_price_list');
+                $price_eur     = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), $currencyDefault->code, $price_list->total);
+                $price_pkr     = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $price_list->total);
+
+                info('Price = ' . $price_eur);
+
+                $pm    = PaymentMethods::where('name', 'easypaisa')->first();
+                $data  = [
+                    'property_id'      => Session::get('payment_property_id'),
+                    'checkin'          => Session::get('payment_checkin'),
+                    'checkout'         => Session::get('payment_checkout'),
+                    'number_of_guests' => Session::get('payment_number_of_guests'),
+                    'transaction_id'   => $response->json()['transactionId'],
+                    'price_list'       => Session::get('payment_price_list'),
+                    'country'          => Session::get('payment_country'),
+                    'message_to_host'  => Session::get('message_to_host_' . auth()->id()),
+                    'payment_method_id' => $pm->id,
+                    'paymode'          => 'easypaisa',
+                    'booking_id'       => $booking_id,
+                    'booking_type'     => $booking_type,
+                    'api_response'       => $response->json(),
+                ];
+
+                if (isset($booking_id) && !empty($booking_id)) {
+                    $code = $this->update($data);
+                } else {
+                    $code = $this->store($data);
+                }
+
+                $this->helper->one_time_message('success', trans('messages.success.payment_complete_success'));
+                DB::commit();
+
+                return response()->json([
+                    'success'   => true,
+                    'message'   =>  trans('messages.success.payment_complete_success'),
+                    'data'      => [
+                        'api_status' => $response->status(),
+                        'responseCode' => $response->json()['responseCode'],
+                        'responseDesc' => $response->json()['responseDesc'],
+                        'requested_code' => $code,
+                        'redirect_url' => url('booking/requested?code=' . $code),
+
+                    ],
+                ],	200);
+            } else {
+                DB::rollback();
+                return response()->json([
+                    'success'   => false,
+                    'message'   =>  $response->json()['responseDesc'],
+                    'data'      => [
+                        'api_status' => $response->status(),
+                        'responseCode' => $response->json()['responseCode'],
+                        'responseDesc' => $response->json()['responseDesc'],
+
+                    ],
+                ],	500);
+
+            }
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success'   => false,
+                'message'   => $e->getMessage(),
+                'data'      => [],
+            ],	500);
+
+        }
+    }
+
+
+
+    public function jazzcashPayment(Request $request)
+    {
+
+        $data = $this->getDataForBooking();
+        $data['jazzcash']  = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
+
+
+
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        //1.
+        //get formatted price. remove period(.) from the price
+        $prod_price = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total);
+        $temp_amount     = $prod_price * 100;
+        $amount_array     = explode('.', $temp_amount);
+        $pp_Amount         = $amount_array[0];
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        //2.
+        //get the current date and time
+        //be careful set TimeZone in config/app.php
+        $DateTime         = new \DateTime();
+        $pp_TxnDateTime = $DateTime->format('YmdHis');
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        //3.
+        //to make expiry date and time add one hour to current date and time
+        $ExpiryDateTime = $DateTime;
+        $ExpiryDateTime->modify('+' . 1 . ' hours');
+        $pp_TxnExpiryDateTime = $ExpiryDateTime->format('YmdHis');
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        //4.
+        //make unique transaction id using current date
+        $pp_TxnRefNo = 'T' . $pp_TxnDateTime;
+        //NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+
+        //--------------------------------------------------------------------------------
+        //$post_data
+        $data['post_data'] =  array(
+            "pp_Version"             => '1.1',
+            "pp_TxnType" 			=> "MPAY",
+            "pp_Language"             => 'EN',
+            "pp_MerchantID"         => $data['jazzcash']['merchant_id'],
+            "pp_SubMerchantID"         => "",
+            "pp_Password"             => $data['jazzcash']['password'],
+            "pp_BankID"             => "TBANK",
+            "pp_ProductID"             => "RETL",
+            "pp_TxnRefNo"             => $pp_TxnRefNo,
+            "pp_Amount" 			=> $pp_Amount,
+            "pp_Amount"             => "1000",
+            "pp_TxnCurrency"         => 'PKR',
+            "pp_TxnDateTime"         => $pp_TxnDateTime,
+            "pp_BillReference"         => "billRef",
+            "pp_Description"         => "Description of transaction",
+            "pp_TxnExpiryDateTime"     => $pp_TxnExpiryDateTime,
+            "pp_ReturnURL"             => "http://localhost/jazzcash-rest-api/return.php",
+            "pp_SecureHash"         => "",
+            "ppmpf_1"                 => "1",
+            "ppmpf_2"                 => "2",
+            "ppmpf_3"                 => "3",
+            "ppmpf_4"                 => "4",
+            "ppmpf_5"                 => "5",
+        );
+
+        // dd($post_data);
+        // echo '<pre>';
+        // print_r($post_data);
+
+
+
+        $pp_SecureHash = $this->get_SecureHash($data['post_data']);
+
+        $data['post_data']['pp_SecureHash'] = $pp_SecureHash;
+
+        // $values = array(
+        // 	'TxnRefNo'    => $post_data['pp_TxnRefNo'],
+        // 	'amount' 	  => $product[0]->price,
+        // 	'description' => $post_data['pp_Description'],
+        // 	'status' 	  => 'pending'
+        // );
+        // DB::table('order')->insert($values);
+
+
+        // Session::put('post_data',$post_data);
+        // echo '<pre>';
+        // print_r($post_data);
+        // echo '</pre>';
+
+        return view('payment.jazzcash', $data);
+    }
+    private function get_SecureHash($data_array)
+    {
+        ksort($data_array);
+
+        $str = '';
+        foreach ($data_array as $key => $value) {
+            if (!empty($value)) {
+                $str = $str . '&' . $value;
+            }
+        }
+        $salt = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name')['integerity_salt'];
+
+
+        $str = $salt . $str;
+
+        $pp_SecureHash = hash_hmac('sha256', $str, $salt);
+
+        //echo '<pre>';
+        //print_r($data_array);
+        //echo '</pre>';
+
+        return $pp_SecureHash;
+    }
     public function stripeRequest(Request $request)
     {
         $currencyDefault = Currency::getAll()->where('default', 1)->first();
@@ -396,7 +667,7 @@ class PaymentController extends Controller
     }
     public function easypaisaRequest(Request $request)
     {
-        if (isset($request->responseCode) && $request->responseCode =='0000' ) {
+        if (isset($request->responseCode) && $request->responseCode == '0000') {
             $currencyDefault = Currency::getAll()->where('default', 1)->first();
 
             $id            = Session::get('payment_property_id');
@@ -405,9 +676,9 @@ class PaymentController extends Controller
             $price_list    = Session::get('payment_price_list');
             $price_eur     = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), $currencyDefault->code, $price_list->total);
             $price_pkr     = $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $price_list->total);
-            
+
             info('Price = ' . $price_eur);
-            
+
             $pm    = PaymentMethods::where('name', 'easypaisa')->first();
             $data  = [
                 'property_id'      => Session::get('payment_property_id'),
@@ -433,7 +704,6 @@ class PaymentController extends Controller
             $this->helper->one_time_message('success', trans('messages.success.payment_complete_success'));
 
             return redirect('booking/requested?code=' . $code);
-            
         } else {
             $this->helper->one_time_message('success', trans('messages.error.payment_request_error'));
 
@@ -745,6 +1015,7 @@ class PaymentController extends Controller
         $booking->bank_id             = $data['bank_id'] ?? null;
         $booking->note             = $data['note'] ?? null;
         $booking->status            = 'Accepted';
+        if(isset($data['api_response'])) $booking->api_response = $data['api_response'];
         if ($data['paymode'] == 'Bank') {
             $booking->status            = 'Processing';
         }

@@ -489,3 +489,16 @@ function optimize_proact_image_topath($file, string $path, $quality = 80, int $h
 
     return $file_name;
 }
+function convert_pk_phone_number($number) {
+    // define the regular expression pattern for matching the country code
+    $pattern = '/^(\+92|\+)?/';
+
+    // remove the country code from the number using preg_replace
+    $number = preg_replace($pattern, '', $number);
+
+    // add the '0' prefix to the number
+    $number = '0' . $number;
+
+    // return the modified number
+    return $number;
+}

@@ -132,6 +132,11 @@ Route::group(['middleware' => ['guest:users', 'locale']], function () {
     Route::post('payments/stripe-request', 'PaymentController@stripeRequest');
     // Easypaisa
     Route::get('payments/easypaisa', 'PaymentController@easypaisaPayment');
+    Route::post('payments/easypaisa', 'PaymentController@easypaisaDoPayment');    
+
+    
+
+    Route::get('payments/jazzcash', 'PaymentController@jazzcashPayment');    
     Route::post('payments/easypaisa-request', 'PaymentController@easypaisaRequest');
     Route::get('payments/easypaisa-request', 'PaymentController@easypaisaRequest');
     Route::get('payments/easypaisa-confirm', 'PaymentController@easypaisaConfirm');

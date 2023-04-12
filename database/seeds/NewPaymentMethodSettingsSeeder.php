@@ -16,6 +16,23 @@ class NewPaymentMethodSettingsSeeder extends Seeder
     public function run()
     {
 //        Settings for easy paisa
+        Settings::create([
+            'name' => 'username',
+            'type' => 'easypaisa',
+            'value' => 'empty'
+        ]);
+        Settings::create(
+            [
+                'name' => 'password',
+                'type' => 'easypaisa',
+                'value' => 'empty'
+            ]
+        );
+        Settings::create([
+            'name' => 'Credentials',
+            'type' => 'easypaisa',
+            'value' => 'empty'
+        ]);
         Settings::create(
             [
                 'name' => 'store_id',

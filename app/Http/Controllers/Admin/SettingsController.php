@@ -357,7 +357,6 @@ class SettingsController extends Controller
                 Session::flush();
                 return view('vendor.installer.errors.admin');
             }
-
             return $dataTable->render('admin.settings.payment', $data);
         } elseif ($request['gateway'] == 'jazzcash') {
 
@@ -416,6 +415,8 @@ class SettingsController extends Controller
                 'hash_key'      => 'required',
                 'post_url'     => 'required',
                 'confirm_url'     => 'required',
+                'username'     => 'required',
+                'password'     => 'required',
 //                'payment_method'          => 'required',
                 'easypaisa_status' => 'required',
             );
@@ -428,6 +429,8 @@ class SettingsController extends Controller
                 'hash_key'      => 'EASYPAISA HASH KEY',
                 'post_url'     => 'EASYPAISA POST URL',
                 'confirm_url'     => 'EASYPAISA Confirm URL',
+                'username'     => 'EASYPAISA username ',
+                'password'     => 'EASYPAISA password',
 //                'payment_method'          => 'EASYPAISA PAYMENT METHOD',
                 'easypaisa_status' => 'EASYPAISA Status',
             );
@@ -444,6 +447,10 @@ class SettingsController extends Controller
                     Settings::where(['name' => 'hash_key', 'type' => 'easypaisa'])->update(['value' => $request->hash_key]);
                     Settings::where(['name' => 'post_url', 'type' => 'easypaisa'])->update(['value' => $request->post_url]);
                     Settings::where(['name' => 'confirm_url', 'type' => 'easypaisa'])->update(['value' => $request->confirm_url]);
+                    Settings::where(['name' => 'username', 'type' => 'easypaisa'])->update(['value' => $request->username]);
+                    Settings::where(['name' => 'password', 'type' => 'easypaisa'])->update(['value' => $request->password]);
+                    $Credentials = base64_encode($request->username.":".$request->password) ;
+                    Settings::where(['name' => 'Credentials', 'type' => 'easypaisa'])->update(['value' => $Credentials]);
 
 
 

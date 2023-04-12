@@ -33,6 +33,7 @@
 		<link rel="stylesheet" href="{{asset(env('FILE_PATH').'/css/vendors/bootstrap/bootstrap.min.css')}}">
 		<link rel="stylesheet" href="{{asset(env('FILE_PATH').'/css/vendors/fontawesome/css/all.min.css')}}">
 		<link rel="stylesheet" href="{{asset(env('FILE_PATH').'/css/style.css')}}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css"/>
 		<!--CSS new version end-->
 	</head>
 <body>
