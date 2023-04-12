@@ -14,10 +14,10 @@ class AddEmbededMapCodeColumn extends Migration
     public function up()
     {
         Schema::table('properties', function (Blueprint $table) {
-            $table->text('embeded_map')->nullable()->after('approved');
+            // $table->text('embeded_map')->nullable()->after('approved');
         });
         Schema::table('activities', function (Blueprint $table) {
-            $table->text('embeded_map')->nullable()->after('approved');
+            // $table->text('embeded_map')->nullable()->after('approved');
         });
     }
 
