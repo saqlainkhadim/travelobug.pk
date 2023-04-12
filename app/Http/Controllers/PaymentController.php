@@ -408,7 +408,7 @@ class PaymentController extends Controller
             ])->post($easypaisa['post_url'], $api_data);
 
 
-            if ($response->status() == 200 && $response->json()['responseCode'] == "0000" ) {
+            if ($response->status() == 200 && isset($response->json()['responseCode']) && $response->json()['responseCode'] == "0000" ) {
 
                 $currencyDefault = Currency::getAll()->where('default', 1)->first();
 
@@ -452,8 +452,8 @@ class PaymentController extends Controller
                     'message'   =>  trans('messages.success.payment_complete_success'),
                     'data'      => [
                         'api_status' => $response->status(),
-                        'responseCode' => $response->json()['responseCode'],
-                        'responseDesc' => $response->json()['responseDesc'],
+                        'responseCode' => isset($response->json()['responseCode']) ? $response->json()['responseCode']:'',
+                        'responseDesc' => isset($response->json()['responseDesc']) ? $response->json()['responseDesc']:'',
                         'requested_code' => $code,
                         'redirect_url' => url('booking/requested?code=' . $code),
 
