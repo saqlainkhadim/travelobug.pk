@@ -136,7 +136,9 @@ Route::group(['middleware' => ['guest:users', 'locale']], function () {
 
     
 
-    Route::get('payments/jazzcash', 'PaymentController@jazzcashPayment');    
+
+    Route::get('payments/jazzcash', 'PaymentController@jazzcashPayment');
+    Route::post('payments/jazzcash-response', 'PaymentController@jazzcashPaymentResponse')->middleware('JazzcashCsrfTokenConversion');
     Route::post('payments/easypaisa-request', 'PaymentController@easypaisaRequest');
     Route::get('payments/easypaisa-request', 'PaymentController@easypaisaRequest');
     Route::get('payments/easypaisa-confirm', 'PaymentController@easypaisaConfirm');

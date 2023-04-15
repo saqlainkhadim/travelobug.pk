@@ -811,11 +811,11 @@ class EmailController extends Controller
 
         $mail->AltBody = 'This is a plain-text message body';
 
-        if (!$mail->send()) {
-            echo 'Mailer Error: ' . $mail->ErrorInfo;
-        } else {
-            echo 'Message sent!';
-        }
+//        if (!$mail->send()) {
+//            echo 'Mailer Error: ' . $mail->ErrorInfo;
+//        } else {
+//            echo 'Message sent!';
+//        }
     }
 
 
