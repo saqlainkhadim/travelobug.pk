@@ -483,22 +483,18 @@ class PaymentController extends Controller
     }
     public function jazzcashPayment(Request $request)
     {
-        // dd(url('payments/jazzcash-response'));
-    
 
-        
+
         $data = $this->getDataForBooking();
         $payment_booking_id = Session::get('payment_booking_id');
         if (isset($payment_booking_id) && $payment_booking_id) {
         } else {
             return redirect()->back();
         }
-dd($data['jazzcash']);
+
         $data['jazzcash']  = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
 
         $amount =  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total);
-
-
         $data['post_data']['MerchantID'] = $MerchantID    = $data['jazzcash']['merchant_id']; //Your Merchant from transaction Credentials
         $data['post_data']['Password'] = $Password      = $data['jazzcash']['password']; //Your Password from transaction Credentials
         $data['post_data']['ReturnURL'] = $ReturnURL     = url('payments/jazzcash-response');
@@ -508,7 +504,7 @@ dd($data['jazzcash']);
         // "https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform";
 
         date_default_timezone_set("Asia/karachi");
-        $data['post_data']['Amount'] = $Amount =$amount * 1; //Last two digits will be considered as Decimal
+        $data['post_data']['Amount'] = $Amount =$amount * 100; //Last two digits will be considered as Decimal
         $data['post_data']['BillReference'] = $BillReference = "OrderID";
         $data['post_data']['Description'] = $Description = "s";
         $data['post_data']['Language'] = $Language = "EN";
@@ -544,32 +540,25 @@ dd($data['jazzcash']);
         $data['post_data']['Securehash'] = $Securehash = hash_hmac('sha256', $SortedArray, $HashKey);
 
 
-        // dd($data['post_data']);
         $data = $data['post_data'];
-
-
         return view('payment.jazzcash', $data);
     }
 
     public function jazzcashPaymentResponse(Request $request)
     {
-        
 
-$data['jazzcash']  = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
-dd($data['jazzcash']);
-        dd(2);
         Auth::loginUsingId($request->ppmpf_1, true);
         DB::beginTransaction();
         try {
             $data['jazzcash'] = $jazzcash = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
 
-            if (isset($request->pp_ResponseCode) && $request->pp_ResponseCode == '000' || true) {
+            if (isset($request->pp_ResponseCode) && $request->pp_ResponseCode === '000' ) {
 
                 $id = $request->ppmpf_2;
 
                 $special_offer_id = '';
 
-                
+
 
                 $data['paypal_status'] = Settings::getAll()->where('name', 'paypal_status')->where('type', 'PayPal')->first();
 
@@ -580,6 +569,12 @@ dd($data['jazzcash']);
                 $data['booking_id']    = $id;
 
                 $booking                  = Bookings::find( $id );
+
+                if(isset($booking) && $booking->status =="Accepted"){
+                    $this->helper->one_time_message('error',  $request->pp_ResponseMessage);
+                    header("Location: ".url('trips/active'));
+                    exit(0);
+                }
 
                 $data['category'] = $booking->category;
 
@@ -629,6 +624,7 @@ dd($data['jazzcash']);
                     Session::forget('payment_booking_id');
 
                     header("Location: ".url('trips/active'));
+                    exit(0);
                 }
 
                 $currencyDefault = Currency::getAll()->where('default', 1)->first();
@@ -666,23 +662,24 @@ dd($data['jazzcash']);
                 }
 
                 $this->helper->one_time_message('success', trans('messages.success.payment_complete_success'));
-                
+
 
                 DB::commit();
                 header("Location: ".url('booking/requested?code=' . $code));
-
+                exit(0);
             } else {
-                DB::rollback();                
+                DB::rollback();
                 $this->helper->one_time_message('error',  $request->pp_ResponseMessage);
                 header("Location: ".url('trips/active'));
-            
-                
+                exit(0);
+
             }
         } catch (\Exception $e) {
             DB::rollback();
             $this->helper->one_time_message('error',  $e->getMessage());
+            abort(500);
             header("Location: ".url('trips/active'));
-          
+          exit(0);
         }
     }
     public function stripeRequest(Request $request)
