@@ -314,7 +314,7 @@ class PaymentController extends Controller
 
         $data['post_data'] =  array(
             // "storeId"             => $easypaisa['store_id'],
-            "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+            "amount"             => $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total),
             // "amount"             => 10,
             // "postBackURL"         => URL::to('payments/easypaisa-confirm'),
             // "orderRefNum"         => "testTrnsx",
@@ -376,7 +376,7 @@ class PaymentController extends Controller
             'emailAddress'      => 'required',
             'mobileAccountNo'      => 'required',
         );
-        $this->validate($request, $rules,[]);
+        $this->validate($request, $rules, []);
 
         DB::beginTransaction();
         try {
@@ -397,7 +397,7 @@ class PaymentController extends Controller
                 'orderId' => $orderRefNum,
                 'emailAddress' =>  $request->emailAddress,
                 'storeId' =>   $easypaisa['store_id'],
-                'transactionAmount' =>  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
+                'transactionAmount' =>  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total),
                 // 'transactionAmount' =>  10,
                 'transactionType' =>  "MA",
                 'mobileAccountNo' =>  $phone_no,
@@ -408,7 +408,7 @@ class PaymentController extends Controller
             ])->post($easypaisa['post_url'], $api_data);
 
 
-            if ($response->status() == 200 && isset($response->json()['responseCode']) && $response->json()['responseCode'] == "0000" ) {
+            if ($response->status() == 200 && isset($response->json()['responseCode']) && $response->json()['responseCode'] == "0000") {
 
                 $currencyDefault = Currency::getAll()->where('default', 1)->first();
 
@@ -452,13 +452,13 @@ class PaymentController extends Controller
                     'message'   =>  trans('messages.success.payment_complete_success'),
                     'data'      => [
                         'api_status' => $response->status(),
-                        'responseCode' => isset($response->json()['responseCode']) ? $response->json()['responseCode']:'',
-                        'responseDesc' => isset($response->json()['responseDesc']) ? $response->json()['responseDesc']:'',
+                        'responseCode' => isset($response->json()['responseCode']) ? $response->json()['responseCode'] : '',
+                        'responseDesc' => isset($response->json()['responseDesc']) ? $response->json()['responseDesc'] : '',
                         'requested_code' => $code,
                         'redirect_url' => url('booking/requested?code=' . $code),
 
                     ],
-                ],	200);
+                ],    200);
             } else {
                 DB::rollback();
                 return response()->json([
@@ -470,23 +470,17 @@ class PaymentController extends Controller
                         'responseDesc' => $response->json()['responseDesc'],
 
                     ],
-                ],	500);
-
+                ],    500);
             }
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
                 'success'   => false,
                 'message'   => $e->getMessage(),
                 'data'      => [],
-            ],	500);
-
+            ],    500);
         }
     }
-
-
-
     public function jazzcashPayment(Request $request)
     {
         // dd(url('payments/jazzcash-response'));
@@ -494,21 +488,27 @@ class PaymentController extends Controller
 
         
         $data = $this->getDataForBooking();
+        $payment_booking_id = Session::get('payment_booking_id');
+        if (isset($payment_booking_id) && $payment_booking_id) {
+        } else {
+            return redirect()->back();
+        }
+dd($data['jazzcash']);
         $data['jazzcash']  = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
 
-        $amount =  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ;
+        $amount =  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total);
 
 
-        $data['post_data']['MerchantID'] = $MerchantID    = "MC51155"; //Your Merchant from transaction Credentials
-        $data['post_data']['Password'] = $Password      = "059c913062"; //Your Password from transaction Credentials
-        $data['post_data']['ReturnURL'] = $ReturnURL     = "http://localhost:8000/payments/jazzcash-response";
-        //  url('payments/jazzcash-response');
+        $data['post_data']['MerchantID'] = $MerchantID    = $data['jazzcash']['merchant_id']; //Your Merchant from transaction Credentials
+        $data['post_data']['Password'] = $Password      = $data['jazzcash']['password']; //Your Password from transaction Credentials
+        $data['post_data']['ReturnURL'] = $ReturnURL     = url('payments/jazzcash-response');
         // "http://localhost/jazzcash-rest-api/return.php"; //Your Return URL
-        $data['post_data']['HashKey'] = $HashKey = "uh08vf5876"; //Your HashKey integrity salt from transaction Credentials
-        $data['post_data']['PostURL'] = $PostURL = "https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform";
+        $data['post_data']['HashKey'] = $HashKey = $data['jazzcash']['integerity_salt']; //Your HashKey integrity salt from transaction Credentials
+        $data['post_data']['PostURL'] = $PostURL = $data['jazzcash']['post_url'];
+        // "https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform";
 
         date_default_timezone_set("Asia/karachi");
-        $data['post_data']['Amount'] = $Amount = 100.00 * 1; //Last two digits will be considered as Decimal
+        $data['post_data']['Amount'] = $Amount =$amount * 1; //Last two digits will be considered as Decimal
         $data['post_data']['BillReference'] = $BillReference = "OrderID";
         $data['post_data']['Description'] = $Description = "s";
         $data['post_data']['Language'] = $Language = "EN";
@@ -521,8 +521,8 @@ class PaymentController extends Controller
         $data['post_data']['SubMerchantID'] = $SubMerchantID = "";
         $data['post_data']['DiscountedAmount'] = $DiscountedAmount = "";
         $data['post_data']['DiscountedBank'] = $DiscountedBank = "";
-        $data['post_data']['ppmpf_1'] = $ppmpf_1 = "1";
-        $data['post_data']['ppmpf_2'] = $ppmpf_2 = "2";
+        $data['post_data']['ppmpf_1'] = $ppmpf_1 = auth()->user()->id;
+        $data['post_data']['ppmpf_2'] = $ppmpf_2 = Session::get('payment_booking_id');
         $data['post_data']['ppmpf_3'] = $ppmpf_3 = "3";
         $data['post_data']['ppmpf_4'] = $ppmpf_4 = "4";
         $data['post_data']['ppmpf_5'] = $ppmpf_5 = "5";
@@ -550,48 +550,86 @@ class PaymentController extends Controller
 
         return view('payment.jazzcash', $data);
     }
-    
+
     public function jazzcashPaymentResponse(Request $request)
     {
+        
 
-
-        $rules = array(
-            'emailAddress'      => 'required',
-            'mobileAccountNo'      => 'required',
-        );
-        $this->validate($request, $rules,[]);
-
+$data['jazzcash']  = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
+dd($data['jazzcash']);
+        dd(2);
+        Auth::loginUsingId($request->ppmpf_1, true);
         DB::beginTransaction();
         try {
-            $data = $this->getDataForBooking();
-            $data['easypaisa'] = $easypaisa = Settings::getAll()->where('type', 'easypaisa')->pluck('value', 'name');
-            $DateTime      = new DateTime();
-            $orderRefNum =  $data['id'] . $DateTime->format('YmdHis');
+            $data['jazzcash'] = $jazzcash = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
 
+            if (isset($request->pp_ResponseCode) && $request->pp_ResponseCode == '000' || true) {
 
-            $phone_no = $request->mobileAccountNo;
-            $first_mobileAccountNo_char = substr($request->mobileAccountNo, 0, 1);
-            if (auth()->user()->default_country == 'pk' &&  $first_mobileAccountNo_char == '+') {
-                $phone_no =  convert_pk_phone_number($request->mobileAccountNo);
-            }
+                $id = $request->ppmpf_2;
 
+                $special_offer_id = '';
 
-            $api_data = [
-                'orderId' => $orderRefNum,
-                'emailAddress' =>  $request->emailAddress,
-                'storeId' =>   $easypaisa['store_id'],
-                'transactionAmount' =>  $this->helper->convert_currency($this->helper->getCurrentCurrencyCode(), 'PKR', $data['price_list']->total) ,
-                // 'transactionAmount' =>  10,
-                'transactionType' =>  "MA",
-                'mobileAccountNo' =>  $phone_no,
-            ];
+                
 
-            $response = Http::withHeaders([
-                'Credentials' => $easypaisa['Credentials'],
-            ])->post($easypaisa['post_url'], $api_data);
+                $data['paypal_status'] = Settings::getAll()->where('name', 'paypal_status')->where('type', 'PayPal')->first();
 
+                $data['stripe_status'] = Settings::getAll()->where('name', 'stripe_status')->where('type', 'Stripe')->first();
+                $data['easypaisa_status'] = Settings::getAll()->where('name', 'easypaisa_status')->where('type', 'easypaisa')->first();
+                $data['jazzcash_status'] = Settings::getAll()->where('name', 'jazzcash_status')->where('type', 'jazzcash')->first();
 
-            if ($response->status() == 200 && isset($response->json()['responseCode']) && $response->json()['responseCode'] == "0000" ) {
+                $data['booking_id']    = $id;
+
+                $booking                  = Bookings::find( $id );
+
+                $data['category'] = $booking->category;
+
+                if ($booking->category == 'activity') {
+                    $data['result'] = Activity::find($booking->activity_id);
+                } else {
+                    $data['result'] = Properties::find($booking->property_id);
+                }
+                $data['property_id']      = $booking->property_id;
+                $data['activity_id']      = $booking->activity_id;
+                $data['number_of_guests'] = $booking->guest;
+                $data['booking_type']     = $booking->booking_type;
+                $data['checkin']          = setDateForDb($booking->start_date);
+                $data['checkout']         = setDateForDb($booking->end_date);
+                $data['status']           = $booking->status;
+                $data['booking_id']       = $id;
+                $data['banks'] = Bank::getAll()->where('status', 'Active')->count();
+
+                Session::put('payment_property_id', $booking->property_id);
+                Session::put('payment_checkin', $booking->start_date);
+                Session::put('payment_checkout', $booking->end_date);
+                Session::put('payment_number_of_guests',  $booking->guest);
+                Session::put('payment_booking_type', $booking->booking_type);
+                Session::put('payment_booking_status', $booking->status);
+                Session::put('payment_booking_id', $id);
+
+                $from = new DateTime(setDateForDb($booking->start_date));
+                $to = new DateTime(setDateForDb($booking->end_date));
+                $data['nights'] = $to->diff($from)->format("%a");
+                $travel_credit = 0;
+                if ($booking->category == 'activity') {
+                    $data['price_list'] = json_decode($this->helper->getActivityPrice($data['activity_id'], $data['checkin'], $data['checkout'], $data['number_of_guests']));
+                } else {
+                    $data['price_list'] = json_decode($this->helper->getPrice($data['property_id'], $data['checkin'], $data['checkout'], $data['number_of_guests']));
+                }
+                Session::put('payment_price_list', $data['price_list']);
+
+                if (((isset($data['price_list']->status) && !empty($data['price_list']->status)) ? $data['price_list']->status : '') == 'Not available') {
+
+                    $this->helper->one_time_message('success', trans('messages.error.property_available_error'));
+                    Session::forget('payment_property_id');
+                    Session::forget('payment_checkin');
+                    Session::forget('payment_checkout');
+                    Session::forget('payment_number_of_guests');
+                    Session::forget('payment_booking_type');
+                    Session::forget('payment_booking_status');
+                    Session::forget('payment_booking_id');
+
+                    header("Location: ".url('trips/active'));
+                }
 
                 $currencyDefault = Currency::getAll()->where('default', 1)->first();
 
@@ -604,21 +642,21 @@ class PaymentController extends Controller
 
                 info('Price = ' . $price_eur);
 
-                $pm    = PaymentMethods::where('name', 'easypaisa')->first();
+                $pm    = PaymentMethods::where('name', 'jazzcash')->first();
                 $data  = [
                     'property_id'      => Session::get('payment_property_id'),
                     'checkin'          => Session::get('payment_checkin'),
                     'checkout'         => Session::get('payment_checkout'),
                     'number_of_guests' => Session::get('payment_number_of_guests'),
-                    'transaction_id'   => $response->json()['transactionId'],
+                    'transaction_id'   => $request->TxnRefNumber,
                     'price_list'       => Session::get('payment_price_list'),
                     'country'          => Session::get('payment_country'),
                     'message_to_host'  => Session::get('message_to_host_' . auth()->id()),
                     'payment_method_id' => $pm->id,
-                    'paymode'          => 'easypaisa',
+                    'paymode'          => 'jazzcash',
                     'booking_id'       => $booking_id,
                     'booking_type'     => $booking_type,
-                    'api_response'       => $response->json(),
+                    'api_response'       => json_encode($request->all()),
                 ];
 
                 if (isset($booking_id) && !empty($booking_id)) {
@@ -628,43 +666,23 @@ class PaymentController extends Controller
                 }
 
                 $this->helper->one_time_message('success', trans('messages.success.payment_complete_success'));
+                
+
                 DB::commit();
+                header("Location: ".url('booking/requested?code=' . $code));
 
-                return response()->json([
-                    'success'   => true,
-                    'message'   =>  trans('messages.success.payment_complete_success'),
-                    'data'      => [
-                        'api_status' => $response->status(),
-                        'responseCode' => isset($response->json()['responseCode']) ? $response->json()['responseCode']:'',
-                        'responseDesc' => isset($response->json()['responseDesc']) ? $response->json()['responseDesc']:'',
-                        'requested_code' => $code,
-                        'redirect_url' => url('booking/requested?code=' . $code),
-
-                    ],
-                ],	200);
             } else {
-                DB::rollback();
-                return response()->json([
-                    'success'   => false,
-                    'message'   =>  $response->json()['responseDesc'],
-                    'data'      => [
-                        'api_status' => $response->status(),
-                        'responseCode' => $response->json()['responseCode'],
-                        'responseDesc' => $response->json()['responseDesc'],
-
-                    ],
-                ],	500);
-
+                DB::rollback();                
+                $this->helper->one_time_message('error',  $request->pp_ResponseMessage);
+                header("Location: ".url('trips/active'));
+            
+                
             }
-
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'success'   => false,
-                'message'   => $e->getMessage(),
-                'data'      => [],
-            ],	500);
-
+            $this->helper->one_time_message('error',  $e->getMessage());
+            header("Location: ".url('trips/active'));
+          
         }
     }
     public function stripeRequest(Request $request)
@@ -1079,7 +1097,7 @@ class PaymentController extends Controller
         $booking->bank_id             = $data['bank_id'] ?? null;
         $booking->note             = $data['note'] ?? null;
         $booking->status            = 'Accepted';
-        if(isset($data['api_response'])) $booking->api_response = $data['api_response'];
+        if (isset($data['api_response'])) $booking->api_response = $data['api_response'];
         if ($data['paymode'] == 'Bank') {
             $booking->status            = 'Processing';
         }

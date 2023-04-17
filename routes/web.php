@@ -132,9 +132,12 @@ Route::group(['middleware' => ['guest:users', 'locale']], function () {
     Route::post('payments/stripe-request', 'PaymentController@stripeRequest');
     // Easypaisa
     Route::get('payments/easypaisa', 'PaymentController@easypaisaPayment');
-    Route::post('payments/easypaisa', 'PaymentController@easypaisaDoPayment');    
+    Route::post('payments/easypaisa', 'PaymentController@easypaisaDoPayment');
 
-    
+
+    // jazzcash
+    Route::get('payments/jazzcash', 'PaymentController@jazzcashPayment');
+
 
 
     Route::get('payments/jazzcash', 'PaymentController@jazzcashPayment');
@@ -199,3 +202,6 @@ Route::post('duplicate-phone-number-check-for-existing-customer', 'UserControlle
 Route::get('contact', 'HomeController@contactPage');
 Route::post('contact/form', 'HomeController@contactForm');
 Route::get('{name}', 'HomeController@staticPages');
+
+// jazzcash
+Route::match(array('GET', 'POST'),'payments/jazzcash-response', 'PaymentController@jazzcashPaymentResponse');

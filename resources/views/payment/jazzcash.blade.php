@@ -2,12 +2,12 @@
 <head>
     <script type="text/javascript">
         function closethisasap() {
-            // document.forms["redirectpost"].submit();
+            document.forms["redirectpost"].submit();
         }
     </script>
 </head>
 <body onload="closethisasap();">
-    <div id="header" style="display: ;">
+    <div id="header" style="display:none ;">
         <form name="redirectpost" method="post" action="<?php echo $PostURL; ?>" />
         <input type="text" name="pp_Version" value="<?php echo $Version; ?>" />
         <input type="text" name="pp_TxnType" value="<?php echo $TxnType; ?>" />
@@ -36,7 +36,7 @@
 
 
         <input type="text" placeholder="ppmpf_1" name="ppmpf_1" value="<?php echo $ppmpf_1; ?>" />
-        <input type="text" placeholder="ppmpf_2" name="ppmpf_2" value="<?php echo $ppmpf_2; ?>" />
+        <input type="text" placeholder="ppmpf_2" name="ppmpf_2" value='<?php echo $ppmpf_2; ?>' />
         <input type="text" placeholder="ppmpf_3" name="ppmpf_3" value="<?php echo $ppmpf_3; ?>" />
         <input type="text" placeholder="ppmpf_4" name="ppmpf_4" value="<?php echo $ppmpf_4; ?>" />
         <input type="text" placeholder="ppmpf_5" name="ppmpf_5" value="<?php echo $ppmpf_5; ?>" /><br> <br> <br>
@@ -44,7 +44,7 @@
         </form>
 
         <?php
-        
+
         ?>
 
     </div>
