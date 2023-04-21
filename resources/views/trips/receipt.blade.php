@@ -15,7 +15,10 @@
   <div class="card-body pt-0 pb-0 pl-4 pr-4">
     <div class="row mb-4 mt-5">
       <div class="col-md-6 l-pad-none p-0">
-       <img src="{{@$logo}}">
+       <img src="{{@$logo}}" style="
+    max-height: 80px;
+    max-width: 80px;
+">
      </div>
 
      <div class="col-md-6 print-div text-right p-0" id="print-div">

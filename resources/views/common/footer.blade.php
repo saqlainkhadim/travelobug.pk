@@ -59,7 +59,7 @@
             <div class="col-6 col-sm-3 mt-5">
                 <div class="row mt-5">
                     <div class="col-md-12 text-center">
-                        <a href="{{ url('/') }}"><img src="{{$logo ?? ''}}" class="" alt="logo" style="max-height:80px"></a>
+                        <a href="{{ url('/') }}"><img src="{{$logo ?? ''}}" class="" alt="logo" style="max-height:80px;max-width: 80px;"></a>
                     </div>
                 </div>
 
