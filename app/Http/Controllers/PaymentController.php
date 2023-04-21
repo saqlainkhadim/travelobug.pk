@@ -211,7 +211,14 @@ class PaymentController extends Controller
             }
 
             $code = $this->store($data);
+            $data['booking_details'] = Bookings::with('currency')->where('code', $code)->first();
+            $host_id =$data['booking_details']->host_id;
+
+
+            $companyName = Settings::getAll()->where('type', 'general')->where('name', 'name')->first()->value;
+            notificationSave(['user_id' => $host_id, 'message' => $message_to_host]);
             $this->helper->one_time_message('success', trans('messages.booking_request.request_has_sent'));
+
             if (request('category', 'property') == 'activity') {
                 return redirect('booking/requested?code=' . $code . '&category=activity');
             }
