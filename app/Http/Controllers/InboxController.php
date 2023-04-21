@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use DB, validator;
+use DB;
+
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Http\Helpers\Common;
 use App\Http\Controllers\Controller;
