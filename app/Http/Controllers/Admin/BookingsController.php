@@ -321,7 +321,37 @@ class BookingsController extends Controller
     public function detailsActivity(Request $request)
     {
 
+        $data['result']  = $result = Bookings::with('bank')->find($request->id);
+        if(! empty(  trim($data['result']['transaction_id']))  && $result->payment_methods->name == "jazzcash"){
+            $jazzcash = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
+            $salt = $jazzcash ['integerity_salt'];
+            $data=[
+                    "pp_TxnRefNo"=> trim($data['result']['transaction_id']),
+                    "pp_MerchantID"=> $jazzcash ['merchant_id'],
+                    "pp_Password"=> $jazzcash ['password'],
+                    "pp_SecureHash"=>"1"
+            ];
+           $HashArray =[ $data['pp_MerchantID'],$data['pp_Password'],$data['pp_TxnRefNo'] ];
+           $SortedArray = $salt;
+           for ($i = 0; $i < count($HashArray); $i++) {
+               if ($HashArray[$i] != 'undefined' and $HashArray[$i] != null and $HashArray[$i] != "") {
+                   $SortedArray .= "&" . $HashArray[$i];
+               }
+           }
+           $data['pp_SecureHash'] = $Securehash = hash_hmac('sha256', $SortedArray, $salt);
+           $response = Http::post('https://sandbox.jazzcash.com.pk/ApplicationAPI/API/PaymentInquiry/Inquire', $data);
+           
+            if($response->json()['pp_ResponseCode'] == "000"){
+                $data['jazzcash_status'] = $response->json()['pp_Status'];
+            }else if($response->json()['pp_ResponseCode'] == "110"){
+                $data['jazzcash_status'] = "Invalid Transaction no.";
+            }
+            else{
+                $data['jazzcash_status'] = isset( $response->json()['pp_Status']) ?  $response->json()['pp_Status'] : "Failed";
+            }
+          
 
+        }
         $data['result']  = $result = Bookings::with('bank')->find($request->id);
         $data['bank']    =  PayoutSetting::where('user_id', $result->host_id)->first();
         $data['date_price']       = json_decode($result->date_with_price);
