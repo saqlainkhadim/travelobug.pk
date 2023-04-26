@@ -289,7 +289,7 @@ class BookingsController extends Controller
                }
            }
            $data['pp_SecureHash'] = $Securehash = hash_hmac('sha256', $SortedArray, $salt);
-           $response = Http::post('https://sandbox.jazzcash.com.pk/ApplicationAPI/API/PaymentInquiry/Inquire', $data);
+           $response = Http::post($jazzcash['inquire_url'], $data);
            
             if($response->json()['pp_ResponseCode'] == "000"){
                 $data['jazzcash_status'] = $response->json()['pp_Status'];
@@ -339,7 +339,7 @@ class BookingsController extends Controller
                }
            }
            $data['pp_SecureHash'] = $Securehash = hash_hmac('sha256', $SortedArray, $salt);
-           $response = Http::post('https://sandbox.jazzcash.com.pk/ApplicationAPI/API/PaymentInquiry/Inquire', $data);
+           $response = Http::post($jazzcash['inquire_url'], $data);
            
             if($response->json()['pp_ResponseCode'] == "000"){
                 $data['jazzcash_status'] = $response->json()['pp_Status'];
