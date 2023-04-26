@@ -651,7 +651,7 @@ class PaymentController extends Controller
                     'checkin'          => Session::get('payment_checkin'),
                     'checkout'         => Session::get('payment_checkout'),
                     'number_of_guests' => Session::get('payment_number_of_guests'),
-                    'transaction_id'   => $request->TxnRefNumber,
+                    'transaction_id'   => $request->pp_TxnRefNo,
                     'price_list'       => Session::get('payment_price_list'),
                     'country'          => Session::get('payment_country'),
                     'message_to_host'  => Session::get('message_to_host_' . auth()->id()),

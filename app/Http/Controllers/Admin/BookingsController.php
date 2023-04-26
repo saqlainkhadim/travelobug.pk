@@ -14,6 +14,8 @@ use App\Models\{Activity, BankDate, Bookings, BookingDetails, PropertyDates, Pro
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use niklasravnsborg\LaravelPdf\Facades\Pdf;
+use Illuminate\Support\Facades\Http;
+
 
 class BookingsController extends Controller
 {
@@ -269,7 +271,31 @@ class BookingsController extends Controller
     public function details(Request $request)
     {
 
+        $data['result']  = $result = Bookings::with('bank')->find($request->id);
+        if(! empty(  trim($data['result']['transaction_id'])) ){
+            $jazzcash = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
+            $salt = $jazzcash ['integerity_salt'];
+    
+            $data=[
+                    "pp_TxnRefNo"=> "T2023042701222531",
+                    "pp_MerchantID"=> $jazzcash ['merchant_id'],
+                    "pp_Password"=> $jazzcash ['password'],
+                    "pp_SecureHash"=>"1"
+            ];
+           $HashArray =[ $data['pp_MerchantID'],$data['pp_Password'],$data['pp_TxnRefNo'] ];
+           $SortedArray = $salt;
+           for ($i = 0; $i < count($HashArray); $i++) {
+               if ($HashArray[$i] != 'undefined' and $HashArray[$i] != null and $HashArray[$i] != "") {
+                   $SortedArray .= "&" . $HashArray[$i];
+               }
+           }
+           $data['pp_SecureHash'] = $Securehash = hash_hmac('sha256', $SortedArray, $salt);
+           $response = Http::post('https://sandbox.jazzcash.com.pk/ApplicationAPI/API/PaymentInquiry/Inquire', $data);
+    
+           $data['jazzcash_status'] = $response->json()->pp_Status;
+           $data['jazzcash_trx_id'] = $data['result']['transaction_id'];
 
+        }
         $data['result']  = $result = Bookings::with('bank')->find($request->id);
         $data['bank']    =  PayoutSetting::where('user_id', $result->host_id)->first();
         $data['date_price']       = json_decode($result->date_with_price);
@@ -299,7 +325,6 @@ class BookingsController extends Controller
         if ($payouts) {
             $data['penalty_amount'] = $payouts->total_penalty_amount;
         }
-
 
         return view('admin.bookings.detail-activity', $data);
     }

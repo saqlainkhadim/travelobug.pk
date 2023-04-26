@@ -341,6 +341,30 @@
 										</div>
 									</div>
 								@endif
+                                @if(@$result->payment_methods->name == "jazzcash")
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">                                            
+                                            Jazz Cash Status
+                                            <img style="width: 90px;" src="{{ asset('public/payment-images/jazz-cash.png') }}" />
+                                        </label>
+                                        <div class="col-sm-6 col-sm-offset-1">
+                                            @if(isset($jazzcash_trx_id))
+                                                Transaction ID : {!! $jazzcash_trx_id !!} <br>
+                                                Transaction Status : {!! $jazzcash_status !!}
+
+                                            @else
+                                                <span class="text-danger">
+                                                    This invoice does not have Transaction ID so we can identify its status from jazzcash
+                                                </span>
+                                                
+
+                                            @endif
+
+                                            
+                                        </div>
+                                    </div>
+                                @endif
+
 							</div>
 						</form>
 
