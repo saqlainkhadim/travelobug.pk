@@ -272,8 +272,7 @@ class BookingsController extends Controller
     {
 
         $data['result']  = $result = Bookings::with('bank')->find($request->id);
-        
-        if(! empty(  trim($data['result']['transaction_id'])) ){
+        if(! empty(  trim($data['result']['transaction_id']))  && $result->payment_methods->name == "jazzcash"){
             $jazzcash = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
             $salt = $jazzcash ['integerity_salt'];
             $data=[
@@ -315,7 +314,7 @@ class BookingsController extends Controller
         if ($payouts) {
             $data['penalty_amount'] = $payouts->total_penalty_amount;
         }
-
+        
         return view('admin.bookings.detail', $data);
     }
 
