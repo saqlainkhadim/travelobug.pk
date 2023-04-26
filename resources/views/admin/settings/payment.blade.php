@@ -50,6 +50,7 @@ $form_data = [
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'JAZZCASH MERCHANT ID', 'name' => 'merchant_id', 'value' => $jazzcash['merchant_id']],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'JAZZCASH PASSWORD', 'name' => 'password', 'value' => $jazzcash['password']],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'JAZZCASH POST URL', 'name' => 'post_url', 'value' => $jazzcash['post_url']],
+	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'JAZZCASH Inquire URL', 'name' => 'inquire_url', 'value' => $jazzcash['inquire_url']],
 	      		['type' => 'text', 'class' => 'validate_field', 'label' => 'JAZZCASH INTEGERITY SALT', 'name' => 'integerity_salt', 'value' => $jazzcash['integerity_salt']],
 	      		['type' => 'select', 'options' => ['0' => 'Inactive', '1' => 'Active'], 'class' => 'validate_field', 'label' => 'JAZZCASH Status', 'name' => 'jazzcash_status', 'value' => $easypaisa['easypaisa_status']],
 			]

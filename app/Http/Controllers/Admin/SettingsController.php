@@ -364,6 +364,7 @@ class SettingsController extends Controller
                 'merchant_id'      => 'required',
                 'password'      => 'required',
                 'post_url'     => 'required',
+                'inquire_url'     => 'required',
 //                'integerity_salt'          => 'required',
                 'jazzcash_status' => 'required',
             );
@@ -390,6 +391,7 @@ class SettingsController extends Controller
                     Settings::where(['name' => 'merchant_id', 'type' => 'jazzcash'])->update(['value' => $request->merchant_id]);
                     Settings::where(['name' => 'password', 'type' => 'jazzcash'])->update(['value' => $request->password]);
                     Settings::where(['name' => 'post_url', 'type' => 'jazzcash'])->update(['value' => $request->post_url]);
+                    Settings::where(['name' => 'inquire_url', 'type' => 'jazzcash'])->update(['value' => $request->inquire_url]);
                     Settings::where(['name' => 'integerity_salt', 'type' => 'jazzcash'])->update(['value' => $request->integerity_salt]);
 
 

@@ -96,6 +96,12 @@ class NewPaymentMethodSettingsSeeder extends Seeder
             'value' => 'empty'
         ]);
 
+        Settings::create([
+            'name' => 'inquire_url',
+            'type' => 'jazzcash',
+            'value' => 'empty'
+        ]);
+
         //   Creating payment methodes
       PaymentMethods::create(['name'=> 'easypaisa','status'=>'Active'])->first();
       PaymentMethods::create(['name'=> 'jazzcash','status'=>'Active'])->first();
