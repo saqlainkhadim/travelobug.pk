@@ -349,8 +349,8 @@
                                         </label>
                                         <div class="col-sm-6 col-sm-offset-1">
                                             @if(isset($jazzcash_trx_id))
-                                                Transaction ID : {!! $jazzcash_trx_id !!} <br>
-                                                Transaction Status : {!! $jazzcash_status !!}
+                                                Transaction ID : {!! isset( $jazzcash_trx_id)? $jazzcash_trx_id:"" !!} <br>
+                                                Transaction Status : {!! isset( $jazzcash_status)? $jazzcash_status:""  !!}
 
                                             @else
                                                 <span class="text-danger">
