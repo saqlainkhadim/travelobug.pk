@@ -35,7 +35,7 @@
 					<div class="h2 pb-4 m-0 text-24">{{ trans('messages.listing_book.request_message') }}</div>
 				@endif
 				@if($booking_type == "instant" || $status == "Processing")
-					<div class="col-md-12 p-0">
+				{{-- <div class="col-md-12 p-0">
 						<label for="exampleInputEmail1">{{ trans('messages.payment.country') }}</label>
 					</div>
 
@@ -45,7 +45,7 @@
 							<option value="{{ $key }}" {{ ($key == $default_country) ? 'selected' : '' }}>{{ $value }}</option>
 							@endforeach
 						</select>
-					</div>
+					</div> --}}
 
 					<div class="col-sm-12 p-0">
 						<label for="exampleInputEmail1">{{ trans('messages.payment.payment_type') }}</label>
