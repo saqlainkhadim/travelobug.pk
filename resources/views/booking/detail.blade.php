@@ -128,9 +128,19 @@
                             </div>
 
                             <div>
-                                <p class="pr-4">{!! $price_list->per_night_price_with_symbol !!}</p>
+                                <p class="pr-4">{!! isset($price_list->per_night_price_with_symbol) ? $price_list->per_night_price_with_symbol :"" !!}</p>
                             </div>
                         </div>
+                            <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">Rate (per day)</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! isset($price_list->per_day_price_with_symbol) ? $price_list->per_day_price_with_symbol :"" !!}</p>
+                            </div>
+                        </div>
+
 
                         @if($price_list->date_with_price)
                             @foreach($price_list->date_with_price as $datePrice )
