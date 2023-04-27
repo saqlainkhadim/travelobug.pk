@@ -653,7 +653,6 @@ class BookingsController extends Controller
 
     public function n_as_k_c()
     {
-        return false;
         if (!g_e_v()) {
             return true;
         }
