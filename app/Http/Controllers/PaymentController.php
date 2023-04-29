@@ -167,10 +167,10 @@ class PaymentController extends Controller
             return redirect('payments/stripe');
         }
         if ($request->payment_method == 'easypaisa') {
-            return redirect('payments/easypaisa');
+            return redirect('payments/easypaisa?category=activity');
         }
         if ($request->payment_method == 'jazzcash') {
-            return redirect('payments/jazzcash');
+            return redirect('payments/jazzcash?category=activity');
         } elseif ($request->payment_method == 'paypal') {
             $this->setup();
             if ($amount) {
@@ -230,6 +230,13 @@ class PaymentController extends Controller
     {
         $data['id'] = $id         = Session::get('payment_property_id');
 
+        if(!$data['id']){
+            if (request('category') == 'activity') 
+                $data['id'] = $id = Session::get('payment_activity_id');
+            else 
+                $data['id'] = $id = Session::get('payment_property_id');
+        }
+
         if (request('category') == 'activity') {
             $data['result'] = Activity::find($id);
             $data['activity_id']      = $id;
@@ -261,7 +268,7 @@ class PaymentController extends Controller
 
         $data['currencyDefault']  = $currencyDefault = Currency::getAll()->where('default', 1)->first();
 
-        $data['price_eur']        = $this->helper->convert_currency($data['result']->property_price->default_code, $currencyDefault->code, $data['price_list']->total);
+        // $data['price_eur']        = $this->helper->convert_currency($data['result']->property_price->default_code, $currencyDefault->code, $data['price_list']->total);
 
         $data['price_rate']       = $this->helper->currency_rate($currencyDefault->code, $this->helper->getCurrentCurrencyCode());
         $data['symbol'] = $this->helper->getCurrentCurrencySymbol();
@@ -554,14 +561,14 @@ class PaymentController extends Controller
     public function jazzcashPaymentResponse(Request $request)
     {
 
-        Auth::loginUsingId($request->ppmpf_1, true);
+        Auth::loginUsingId($request->ppmpf_1, true); //user id
         DB::beginTransaction();
         try {
             $data['jazzcash'] = $jazzcash = Settings::getAll()->where('type', 'jazzcash')->pluck('value', 'name');
 
             if (isset($request->pp_ResponseCode) && $request->pp_ResponseCode === '000' ) {
 
-                $id = $request->ppmpf_2;
+                $id = $request->ppmpf_2; //booking_id
 
                 $special_offer_id = '';
 

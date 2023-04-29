@@ -35,7 +35,7 @@
 					<div class="h2 pb-4 m-0 text-24">{{ trans('messages.listing_book.request_message') }}</div>
 				@endif
 				@if($booking_type == "instant" || $status == "Processing")
-					<div class="col-md-12 p-0">
+					{{-- <div class="col-md-12 p-0">
 						<label for="exampleInputEmail1">{{ trans('messages.payment.country') }}</label>
 					</div>
 
@@ -45,7 +45,7 @@
 							<option value="{{ $key }}" {{ ($key == $default_country) ? 'selected' : '' }}>{{ $value }}</option>
 							@endforeach
 						</select>
-					</div>
+					</div> --}}
 
 					<div class="col-sm-12 p-0">
 						<label for="exampleInputEmail1">{{ trans('messages.payment.payment_type') }}</label>
@@ -53,6 +53,16 @@
 
 					<div class="col-sm-12 p-0 pb-3">
 						<select name="payment_method" class="form-control mb20" id="payment-method-select">
+							@if($easypaisa_status->value == 1)
+								<option value="easypaisa" data-payment-type="payment-method" data-cc-type="visa" data-cc-name="" data-cc-expire="">
+EasyPaisa
+								</option>
+							@endif
+							@if($jazzcash_status->value == 1)
+								<option value="jazzcash" data-payment-type="payment-method" data-cc-type="visa" data-cc-name="" data-cc-expire="">
+Jazzcash
+								</option>
+							@endif
 							@if($paypal_status->value == 1)
 								<option value="paypal" data-payment-type="payment-method" data-cc-type="visa" data-cc-name="" data-cc-expire="">
 								{{ trans('messages.payment.paypal') }}
@@ -77,7 +87,7 @@
 								</option>
 							@endif
 						</select>
-						<div class="paypal-div {{$paypal_status->value != 1 ? 'display-off' : ''}}">
+						<div class="paypal-div display-off {{$paypal_status->value != 1 ? 'display-off' : ''}}">
 							<span id='paypal-text'>{{ trans('messages.payment.redirect_to_paypal') }}</span>
 						</div>
 					</div>
