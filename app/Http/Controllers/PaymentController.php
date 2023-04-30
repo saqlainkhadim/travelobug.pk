@@ -230,13 +230,27 @@ class PaymentController extends Controller
     {
         $data['id'] = $id         = Session::get('payment_property_id');
 
-        if(!$data['id']){
-            if (request('category') == 'activity') 
+        if(!$data['id'] ){
+           if(request('category')){
+                if (request('category') == 'activity'){
+                    $data['id'] = $id = Session::get('payment_activity_id');
+                }
+                else{
+                    $data['id'] = $id = Session::get('payment_property_id');
+                }
+           }else{
+            if (Session::get('payment_activity_id')){
                 $data['id'] = $id = Session::get('payment_activity_id');
-            else 
+            }
+            else{
                 $data['id'] = $id = Session::get('payment_property_id');
-        }
+            }
+           }
 
+
+           
+            
+        }
         if (request('category') == 'activity') {
             $data['result'] = Activity::find($id);
             $data['activity_id']      = $id;
@@ -354,6 +368,84 @@ class PaymentController extends Controller
         // // dd($sortedArray );
         // ksort($sortedArray);
 
+        // dd(Session::all());
+
+        $data['category'] = $request->category;
+
+        $data['paypal_status'] = Settings::getAll()->where('name', 'paypal_status')->where('type', 'PayPal')->first();
+
+        $data['stripe_status'] = Settings::getAll()->where('name', 'stripe_status')->where('type', 'Stripe')->first();
+        $data['easypaisa_status'] = Settings::getAll()->where('name', 'easypaisa_status')->where('type', 'easypaisa')->first();
+        $data['jazzcash_status'] = Settings::getAll()->where('name', 'jazzcash_status')->where('type', 'jazzcash')->first();
+
+        $data['booking_id']    = Session::get('booking_id');
+
+        $booking                  = Bookings::find( $data['booking_id']);
+        Session::put('booking_id',  $data['booking_id']);
+
+        if ($booking->category == 'activity') {
+            $data['result'] = Activity::find($booking->activity_id);
+            Session::put('payment_activity_id', $booking->activity_id);
+
+        } else {
+            $data['result'] = Properties::find($booking->property_id);
+            Session::put('payment_property_id', $booking->property_id);
+        }
+        $data['property_id']      = $booking->property_id;
+        $data['activity_id']      = $booking->activity_id;
+        $data['number_of_guests'] = $booking->guest;
+        $data['booking_type']     = $booking->booking_type;
+        $data['checkin']          = setDateForDb($booking->start_date);
+        $data['checkout']         = setDateForDb($booking->end_date);
+        $data['status']           = $booking->status;
+        $data['booking_id']       =  $data['booking_id'];
+        $data['banks'] = Bank::getAll()->where('status', 'Active')->count();
+
+        Session::put('payment_property_id', $booking->property_id);
+        Session::put('payment_checkin', $booking->start_date);
+        Session::put('payment_checkout', $booking->end_date);
+        Session::put('payment_number_of_guests',  $booking->guest);
+        Session::put('payment_booking_type', $booking->booking_type);
+        Session::put('payment_booking_status', $booking->status);
+        Session::put('payment_booking_id',  $data['booking_id']);
+
+        $from = new DateTime(setDateForDb($booking->start_date));
+        $to = new DateTime(setDateForDb($booking->end_date));
+        $data['nights'] = $to->diff($from)->format("%a");
+        $travel_credit = 0;
+        if ($booking->category == 'activity') {
+            $data['price_list'] = json_decode($this->helper->getActivityPrice($data['activity_id'], $data['checkin'], $data['checkout'], $data['number_of_guests']));
+        } else {
+            $data['price_list'] = json_decode($this->helper->getPrice($data['property_id'], $data['checkin'], $data['checkout'], $data['number_of_guests']));
+        }
+        Session::put('payment_price_list', $data['price_list']);
+
+        if (((isset($data['price_list']->status) && !empty($data['price_list']->status)) ? $data['price_list']->status : '') == 'Not available') {
+            $this->helper->one_time_message('success', trans('messages.error.property_available_error'));
+            Session::forget('payment_property_id');
+            Session::forget('payment_checkin');
+            Session::forget('payment_checkout');
+            Session::forget('payment_number_of_guests');
+            Session::forget('payment_booking_type');
+            Session::forget('payment_booking_status');
+            Session::forget('payment_booking_id');
+
+            return redirect('trips/active');
+        }
+
+        $data['currencyDefault'] = $currencyDefault = Currency::where('default', 1)->first();
+        $data['currentCurrency'] = $this->helper->getCurrentCurrency();
+        if ($booking->category == 'activity') {
+            $data['price_eur']       = $this->helper->convert_currency($data['result']->price->code, $currencyDefault->code, $data['price_list']->total);
+            $data['price_rate']      = $this->helper->currency_rate($data['result']->price->currency_code, $data['currentCurrency']->code);
+        } else {
+            $data['price_eur']       = $this->helper->convert_currency($data['result']->property_price->code, $currencyDefault->code, $data['price_list']->total);
+            $data['price_rate']      = $this->helper->currency_rate($data['result']->property_price->currency_code, $data['currentCurrency']->code);
+        }
+        $data['country']         = Country::all()->pluck('name', 'short_name');
+        $data['title']           = 'Pay for your reservation';
+
+        // dd($data);
         // $data['post_data'] =  $sortedArray;
 
         // $sorted_string = '';
@@ -591,7 +683,6 @@ class PaymentController extends Controller
                 }
 
                 $data['category'] = $booking->category;
-
                 if ($booking->category == 'activity') {
                     $data['result'] = Activity::find($booking->activity_id);
                 } else {
@@ -608,6 +699,7 @@ class PaymentController extends Controller
                 $data['banks'] = Bank::getAll()->where('status', 'Active')->count();
 
                 Session::put('payment_property_id', $booking->property_id);
+                Session::put('payment_activity_id', $booking->activity_id);
                 Session::put('payment_checkin', $booking->start_date);
                 Session::put('payment_checkout', $booking->end_date);
                 Session::put('payment_number_of_guests',  $booking->guest);
@@ -654,7 +746,6 @@ class PaymentController extends Controller
 
                 $pm    = PaymentMethods::where('name', 'jazzcash')->first();
                 $data  = [
-                    'property_id'      => Session::get('payment_property_id'),
                     'checkin'          => Session::get('payment_checkin'),
                     'checkout'         => Session::get('payment_checkout'),
                     'number_of_guests' => Session::get('payment_number_of_guests'),
@@ -668,6 +759,12 @@ class PaymentController extends Controller
                     'booking_type'     => $booking_type,
                     'api_response'       => json_encode($request->all()),
                 ];
+
+                if ($booking->category == 'activity') {
+                    $data['activity_id']   = Session::get('payment_activity_id');
+                } else {
+                    $data['property_id']   = Session::get('payment_property_id');
+                }
 
                 if (isset($booking_id) && !empty($booking_id)) {
                     $code = $this->update($data);
