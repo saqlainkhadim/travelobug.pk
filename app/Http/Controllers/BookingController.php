@@ -67,11 +67,15 @@ class BookingController extends Controller
         $data['booking_id']    = $request->id;
 
         $booking                  = Bookings::find($request->id);
+        Session::put('booking_id', $request->id);
 
         if ($booking->category == 'activity') {
             $data['result'] = Activity::find($booking->activity_id);
+            Session::put('payment_activity_id', $booking->activity_id);
+
         } else {
-            $data['result'] = Properties::find($booking->property_id);
+            $data['result'] = Properties::find($booking->property_id);            
+            Session::put('payment_property_id', $booking->property_id);
         }
         $data['property_id']      = $booking->property_id;
         $data['activity_id']      = $booking->activity_id;
