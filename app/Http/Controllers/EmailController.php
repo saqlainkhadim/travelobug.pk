@@ -404,7 +404,7 @@ class EmailController extends Controller
         $booking         = Bookings::find($booking_id);
         $user            = $booking->host;
         $data['url']     = url('/') . '/';
-        $data['result']  = Bookings::where('bookings.id', $booking_id)->with(['users', 'properties', 'host', 'currency', 'messages'])->first()->toArray();
+        $data['result']  = Bookings::where('bookings.id', $booking_id)->with(['users', 'properties', 'host', 'currency', 'messages','activity'])->first()->toArray();
         $data['url']        = url('/') . '/';
         $data['logo']       = LOGO_URL;
 
@@ -435,7 +435,14 @@ class EmailController extends Controller
             $subjectFromDB = $englishTemplate->subject;
             $bodyFromDB    = $englishTemplate->body;
         }
-        $subjectFromDB  = str_replace('{property_name}', $data['result']['properties']['name'], $subjectFromDB);
+
+        if(isset($data['result']['property_id']) && $data['result']['property_id']){
+            $subjectFromDB  = str_replace('{property_name}', $data['result']['properties']['name'], $subjectFromDB);
+        }else{
+            $subjectFromDB  = str_replace('{property_name}', $data['result']['activity']['name'], $subjectFromDB);
+        }
+
+        
         $bodyFromDB     = str_replace('{owner_first_name}', $user->first_name, $bodyFromDB);
         $bodyFromDB     = str_replace('{user_first_name}', $data['result']['users']['first_name'], $bodyFromDB);
         $bodyFromDB     = str_replace('{total_night}', $data['result']['total_night'], $bodyFromDB);
@@ -446,7 +453,12 @@ class EmailController extends Controller
             $myStr = 'night';
         }
         $bodyFromDB     = str_replace('{night/nights}', $myStr, $bodyFromDB);
-        $bodyFromDB     = str_replace('{property_name}', $data['result']['properties']['name'], $bodyFromDB);
+        if(isset($data['result']['property_id']) && $data['result']['property_id']){
+            $bodyFromDB     = str_replace('{property_name}', $data['result']['properties']['name'], $bodyFromDB);
+        }else{
+            $bodyFromDB     = str_replace('{property_name}', $data['result']['activity']['name'], $bodyFromDB);
+        }
+
         $bodyFromDB     = str_replace('{messages_message}', $data['result']['messages'][0]['message'], $bodyFromDB);
         $bodyFromDB     = str_replace('{total_guest}', $data['result']['guest'], $bodyFromDB);
         $bodyFromDB     = str_replace('{start_date}', $checkinDate, $bodyFromDB);
@@ -482,7 +494,7 @@ class EmailController extends Controller
         $booking         = Bookings::find($booking_id);
         $user            = $booking->users;
         $data['url']     = url('/') . '/';
-        $data['result']  = Bookings::where('bookings.id', $booking_id)->with(['users', 'properties', 'host', 'currency', 'messages'])->first()->toArray();
+        $data['result']  = Bookings::where('bookings.id', $booking_id)->with(['users', 'properties', 'host', 'currency', 'messages','activity'])->first()->toArray();
         $data['url']        = url('/') . '/';
         $data['logo']       = LOGO_URL;
 
@@ -510,7 +522,13 @@ class EmailController extends Controller
             $subjectFromDB = $englishTemplate->subject;
             $bodyFromDB    = $englishTemplate->body;
         }
-        $subjectFromDB  = str_replace('{property_name}', $data['result']['properties']['name'], $subjectFromDB);
+
+        if(isset($data['result']['property_id']) && $data['result']['property_id']){
+            $subjectFromDB  = str_replace('{property_name}', $data['result']['properties']['name'], $subjectFromDB);
+        }else{
+            $subjectFromDB  = str_replace('{property_name}', $data['result']['activity']['name'], $subjectFromDB);
+        }
+
         $bodyFromDB     = str_replace('{owner_first_name}', $booking->host->first_name, $bodyFromDB);
         $bodyFromDB     = str_replace('{user_first_name}', $data['result']['users']['first_name'], $bodyFromDB);
         $bodyFromDB     = str_replace('{total_night}', $data['result']['total_night'], $bodyFromDB);
@@ -521,7 +539,13 @@ class EmailController extends Controller
             $myStr = 'night';
         }
         $bodyFromDB     = str_replace('{night/nights}', $myStr, $bodyFromDB);
-        $bodyFromDB     = str_replace('{property_name}', $data['result']['properties']['name'], $bodyFromDB);
+
+        if(isset($data['result']['property_id']) && $data['result']['property_id']){
+            $bodyFromDB     = str_replace('{property_name}', $data['result']['properties']['name'], $bodyFromDB);
+        }else{
+            $bodyFromDB     = str_replace('{property_name}', $data['result']['activity']['name'], $bodyFromDB);
+        }
+
         $bodyFromDB     = str_replace('{messages_message}', $data['result']['messages'][0]['message'], $bodyFromDB);
         $bodyFromDB     = str_replace('{total_guest}', $data['result']['guest'], $bodyFromDB);
         $bodyFromDB     = str_replace('{start_date}', $checkinDate, $bodyFromDB);
