@@ -7,12 +7,23 @@
                 <form action="{{URL::to('payments/bank-payment')}}" method="post" id="payment-form" enctype="multipart/form-data">
                     {{ csrf_field() }}
                     <div class="row justify-content-center">
+                        @if(isset($property_id) && $property_id){
                         <input name="property_id" type="hidden" value="{{ $property_id }}">
+                        @else
+                        <input name="activity_id" type="hidden" value="{{ $activity_id }}">
+                        @endif
                         <input name="checkin" type="hidden" value="{{ $checkin }}">
                         <input name="checkout" type="hidden" value="{{ $checkout }}">
                         <input name="number_of_guests" type="hidden" value="{{ $number_of_guests }}">
                         <input name="nights" type="hidden" value="{{ $nights }}">
+
+                        @if(isset($property_id) && $property_id){
                         <input name="currency" type="hidden" value="{{ $result->property_price->code }}">
+                        @else
+                        <input name="currency" type="hidden" value="{{ $result->price->currency_code }}">
+                        @endif
+
+
                         <input name="booking_id" type="hidden" value="{{ $id }}">
                         <input name="booking_type" type="hidden" value="{{ $booking_type }}">
 
@@ -154,166 +165,303 @@
                     </div>
                 </form>
             </div>
-            <div class="col-md-4 mb-5">
-                <div class="card p-3">
-                    <a href="{{ url('/') }}/properties/{{$result->slug}}">
-                        <img class="card-img-top p-2 rounded" src="{{$result->cover_photo}}" alt="{{$result->name}}"
-                             height="180px">
+            <?php
+            if(isset($category) && $category){
+
+            }else{
+                $category =request('category');
+            }
+                
+            ?>
+        @if(isset( $category) &&  $category == 'activity')
+        @php
+        $price = ($category == 'activity' ? $result->price : $result->property_price);
+        $address = ($category == 'activity' ? $result->address : $result->property_address);
+        @endphp
+
+        <div class="col-md-4  mt-3 mb-5">
+            <div class="card p-3">
+                <a href="{{ url('/') }}/activities/{{ $result->slug}}">
+                    <img class="card-img-top p-2 rounded" src="{{ $result->cover_photo }}" alt="{{ $result->name }}"
+                        height="180px">
+                </a>
+
+                <div class="card-body p-2">
+                    <a href="{{ url('/') }}/activities/{{ $result->slug}}">
+                        <p class="text-16 font-weight-700 mb-0">{{ $result->name }}</p>
                     </a>
-                    <div class="card-body p-2">
-                        <a href="{{ url('/') }}/properties/{{$result->slug}}"><p
-                                class="text-16 font-weight-700 mb-0">{{ $result->name }}</p></a>
 
-                        <p class="text-14 mt-2 text-muted mb-0">
-                            <i class="fas fa-map-marker-alt"></i>
-                            {{$result->property_address->address_line_1}}, {{ $result->property_address->state }}
-                            , {{ $result->property_address->country_name }}
+                    <p class="text-14 mt-2 text-muted mb-0">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{$address->address_line_1}}, {{ $address->state }}, {{ $address->country_name }}
+                    </p>
+                    <div class="border p-4 mt-4 text-center rounded-3">
+                        <p class="text-16 mb-0">
+                            <strong class="font-weight-700 secondary-text-color">{{ $result->property_type_name
+                                }}</strong>
+                            {{trans('messages.payment.for')}}
+                            <strong class="font-weight-700 secondary-text-color">{{ $number_of_guests }}
+                                {{trans('messages.payment.guest')}}</strong>
                         </p>
-                        <div class="border p-4 mt-4 text-center">
-                            <p class="text-16 mb-0">
-                                <strong
-                                    class="font-weight-700 secondary-text-color">{{ $result->property_type_name }}</strong>
-                                {{trans('messages.payment.for')}}
-                                <strong
-                                    class="font-weight-700 secondary-text-color">{{ $number_of_guests }} {{trans('messages.payment.guest')}}</strong>
-                            </p>
-                            <div class="text-14"><strong>{{ date('D, M d, Y', strtotime($checkin)) }}</strong> to
-                                <strong>{{ date('D, M d, Y', strtotime($checkout)) }}</strong></div>
-                        </div>
-
-                        <div class="border p-4 mt-3">
-
-                            @foreach( $price_list->date_with_price as $date_price)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{ $date_price->date }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="pr-4">{!! $date_price->price !!}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                            <hr>
-                            <div class="d-flex justify-content-between text-16">
-                                <div>
-                                    <p class="pl-4">{{trans('messages.payment.night')}}</p>
-                                </div>
-                                <div>
-                                    <p class="pr-4">{{ $nights }}</p>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-between text-16">
-                                <div>
-                                    <p class="pl-4">{!! $price_list->per_night_price_with_symbol !!}
-                                        x {{ $nights }} {{trans('messages.payment.nights')}}</p>
-                                </div>
-                                <div>
-                                    <p class="pr-4">{!! $price_list->total_night_price_with_symbol !!}</p>
-                                </div>
-                            </div>
-
-                            @if($price_list->service_fee)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{trans('messages.payment.service_fee')}}</p>
-                                    </div>
-
-                                    <div>
-                                        <p class="pr-4">{!! $price_list->service_fee_with_symbol !!}</p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($price_list->additional_guest)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{trans('messages.payment.additional_guest_fee')}}</p>
-                                    </div>
-
-                                    <div>
-                                        <p class="pr-4">{!! $price_list->additional_guest_fee_with_symbol !!}</p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($price_list->security_fee)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{trans('messages.payment.security_deposit')}}</p>
-                                    </div>
-
-                                    <div>
-                                        <p class="pr-4">{!! $price_list->security_fee_with_symbol !!}</p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($price_list->cleaning_fee)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{trans('messages.payment.cleaning_fee')}}</p>
-                                    </div>
-
-                                    <div>
-                                        <p class="pr-4">{!! $price_list->cleaning_fee_with_symbol !!}</p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($price_list->iva_tax)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{trans('messages.property_single.iva_tax')}}</p>
-                                    </div>
-
-                                    <div>
-                                        <p class="pr-4">{!!  $price_list->iva_tax_with_symbol !!}</p>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($price_list->accomodation_tax)
-                                <div class="d-flex justify-content-between text-16">
-                                    <div>
-                                        <p class="pl-4">{{trans('messages.property_single.accommodatiton_tax')}}</p>
-                                    </div>
-
-                                    <div>
-                                        <p class="pr-4">{!! $price_list->accomodation_tax_with_symbol !!}</p>
-                                    </div>
-                                </div>
-                            @endif
-                            <hr>
-
-                            <div class="d-flex justify-content-between font-weight-700 text-16">
-                                <div>
-                                    <p class="pl-4">{{trans('messages.payment.total')}}</p>
-                                </div>
-
-                                <div>
-                                    <p class="pr-4">{!! $price_list->total_with_symbol !!}</p>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="text-16"><strong>{{ date('D, M d, Y', strtotime($checkin)) }}</strong> to <strong>{{
+                                date('D, M d, Y', strtotime($checkout)) }}</strong></div>
                     </div>
-                    <div class="card-body text-16">
-                        <p class="exfont">
-                            {{trans('messages.payment.paying_in')}}
-                            <strong><span
-                                    id="payment-currency">{!!moneyFormat($currencyDefault->symbol,$currencyDefault->code)!!}</span></strong>.
-                            {{trans('messages.payment.your_total_charge')}}
-                            <strong><span
-                                    id="payment-total-charge">{!! moneyFormat($currencyDefault->org_symbol, $price_eur) !!}</span></strong>.
-                            {{trans('messages.payment.exchange_rate_booking')}} {!! $symbol !!} 1
-                            to {!! moneyFormat($price_list->property_default->symbol, $price_list->property_default->local_to_propertyRate ) !!} {!! $price_list->property_default->currency_code !!}
-                            ( {{trans('messages.listing_book.host_currency')}} ).
-                        </p>
+
+                    <div class="border p-4 rounded-3 mt-4">
+
+                        @foreach( $price_list->date_with_price as $date_price)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ $date_price->date }}</p>
+                            </div>
+                            <div>
+                                <p class="pr-4">{!! $date_price->price !!}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                        <hr>
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4 text-capitalize">{{ trans('messages.activity_single.person') }}</p>
+                            </div>
+                            <div>
+                                <p class="pr-4">{{ $price_list->total_persons }}</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{!! $price_list->per_day_price_with_symbol !!} x {{
+                                    $price_list->total_days }} day</p>
+                            </div>
+                            <div>
+                                <p class="pr-4">{!! $price_list->total_day_price_with_symbol !!}</p>
+                            </div>
+                        </div>
+
+                        @if($price_list->service_fee)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{trans('messages.payment.service_fee')}}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->service_fee_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- @if($price_list->additional_guest)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{trans('messages.payment.additional_guest_fee')}}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->additional_guest_fee_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif --}}
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between font-weight-700">
+                            <div>
+                                <p class="pl-4">{{trans('messages.payment.total')}}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->total_with_symbol !!}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-
+                <div class="card-body">
+                    <p class="exfont text-16">
+                        {{trans('messages.payment.paying_in')}}
+                        <strong><span id="payment-currency">{!!
+                                moneyFormat($currencyDefault->org_symbol,$currencyDefault->code) !!}</span></strong>.
+                        {{trans('messages.payment.your_total_charge')}}
+                        <strong><span id="payment-total-charge">{!! moneyFormat($currencyDefault->org_symbol,
+                                $price_eur) !!}</span></strong>.
+                        {{-- {{trans('messages.payment.exchange_rate_booking')}} {!!
+                        moneyFormat($currentCurrency->symbol, 1) !!} {!! $currentCurrency->code !!} to {!!
+                        moneyFormat($price->currency->org_symbol, $price_rate ) !!} {{ $price->currency_code }} (
+                        {{trans('messages.listing_book.host_currency')}} ). --}}
+                    </p>
+                </div>
             </div>
+
+
+        </div>
+@else
+
+        <div class="col-md-4 mb-5">
+            <div class="card p-3">
+                <a href="{{ url('/') }}/properties/{{ $result->slug }}">
+                    <img class="card-img-top p-2 rounded" src="{{ $result->cover_photo }}" alt="{{ $result->name }}"
+                        height="180px">
+                </a>
+                <div class="card-body p-2">
+                    <a href="{{ url('/') }}/properties/{{ $result->slug }}">
+                        <p class="text-16 font-weight-700 mb-0">{{ $result->name }}</p>
+                    </a>
+
+                    <p class="text-14 mt-2 text-muted mb-0">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ $result->property_address->address_line_1 ?? '' }}, {{ $result->property_address->state?? ''
+                        }},
+                        {{ $result->property_address->country_name?? '' }}
+                    </p>
+                    <div class="border p-4 mt-4 text-center">
+                        <p class="text-16 mb-0">
+                            <strong class="font-weight-700 secondary-text-color">{{ $result->property_type_name
+                                }}</strong>
+                            {{ trans('messages.payment.for') }}
+                            <strong class="font-weight-700 secondary-text-color">{{ $number_of_guests }}
+                                {{ trans('messages.payment.guest') }}</strong>
+                        </p>
+                        <div class="text-14"><strong>{{ date('D, M d, Y', strtotime($checkin)) }}</strong> to
+                            <strong>{{ date('D, M d, Y', strtotime($checkout)) }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="border p-4 mt-3">
+
+                        @foreach ($price_list->date_with_price as $date_price)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ $date_price->date }}</p>
+                            </div>
+                            <div>
+                                <p class="pr-4">{!! $date_price->price !!}</p>
+                            </div>
+                        </div>
+                        @endforeach
+                        <hr>
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.payment.night') }}</p>
+                            </div>
+                            <div>
+                                <p class="pr-4">{{ $nights }}</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{!! $price_list->per_night_price_with_symbol ?? '' !!} x {{ $nights }}
+                                    {{ trans('messages.payment.nights') }}</p>
+                            </div>
+                            <div>
+                                <p class="pr-4">{!! $price_list->total_night_price_with_symbol ?? '' !!}</p>
+                            </div>
+                        </div>
+
+                        @if ($price_list->service_fee)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.payment.service_fee') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->service_fee_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if (isset($price_list->additional_guest) )
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.payment.additional_guest_fee') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->additional_guest_fee_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if ($price_list->security_fee)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.payment.security_deposit') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->security_fee_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if ($price_list->cleaning_fee)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.payment.cleaning_fee') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->cleaning_fee_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if ($price_list->iva_tax)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.property_single.iva_tax') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->iva_tax_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if ($price_list->accomodation_tax)
+                        <div class="d-flex justify-content-between text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.property_single.accommodatiton_tax') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->accomodation_tax_with_symbol !!}</p>
+                            </div>
+                        </div>
+                        @endif
+                        <hr>
+
+                        <div class="d-flex justify-content-between font-weight-700 text-16">
+                            <div>
+                                <p class="pl-4">{{ trans('messages.payment.total') }}</p>
+                            </div>
+
+                            <div>
+                                <p class="pr-4">{!! $price_list->total_with_symbol !!}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body text-16">
+                    <p class="exfont">
+                        {{ trans('messages.payment.paying_in') }}
+                        <strong><span id="payment-currency">{!! moneyFormat($currencyDefault->symbol,
+                                $currencyDefault->code) !!}</span></strong>.
+                        {{ trans('messages.payment.your_total_charge') }}
+                        <strong><span id="payment-total-charge">{!! moneyFormat($currencyDefault->org_symbol,
+                                $price_eur) !!}</span></strong>.
+                        {{ trans('messages.payment.exchange_rate_booking') }} {!! $symbol !!} 1 to
+                        {!! moneyFormat($price_list->property_default->symbol,
+                        $price_list->property_default->local_to_propertyRate) !!} {!!
+                        $price_list->property_default->currency_code !!} (
+                        {{ trans('messages.listing_book.host_currency') }} ).
+                    </p>
+                </div>
+            </div>
+
+
+        </div>
+@endif
         </div>
     </div>
     </div>

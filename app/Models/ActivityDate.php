@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 class ActivityDate extends Model
 {
     use HasFactory;
+    protected $guarded = [];
 
     public function activity()
     {
